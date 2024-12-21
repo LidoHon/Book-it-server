@@ -1,0 +1,1 @@
+CREATE TABLE "public"."email_verification_tokens" ("id" serial NOT NULL, "token" varchar NOT NULL, "user_id" integer NOT NULL, "created_at" timestamptz NOT NULL, "expires_at" timestamptz NOT NULL, PRIMARY KEY ("id") , FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON UPDATE restrict ON DELETE cascade);

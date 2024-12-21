@@ -1,0 +1,27 @@
+table:
+  name: email_verification_tokens
+  schema: public
+object_relationships:
+  - name: tokenid_relationship
+    using:
+      manual_configuration:
+        column_mapping:
+          id: tokenId
+        insertion_order: null
+        remote_table:
+          name: users
+          schema: public
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - token
+        - id
+        - user_id
+        - created_at
+        - expires_at
+      filter: {}
+    comment: ""

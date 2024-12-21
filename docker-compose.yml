@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_container
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  graphql-engine:
+    image: hasura/graphql-engine:v2.42.0
+    container_name: hasura_graphql_engine
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: ${HASURA_GRAPHQL_DATABASE_URL}
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET}
+      HASURA_GRAPHQL_ENABLE_TELEMETRY: 'false'
+      HASURA_GRAPHQL_CORS_DOMAIN: '*'
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonimous
+      HASURA_GRAPHQL_SERVER_PORT: ${HASURA_GRAPHQL_PORT}
+      HASURA_GRAPHQL_DEV_MODE: 'true'
+      HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"9a49d0bc4563b42c7dbc57a56c25535acaaf62933f9da5e35122024717843317"}'
+    ports:
+      - "8080:8080"
+    command:
+      - graphql-engine
+      - serve
+
+volumes:
+  postgres_data:

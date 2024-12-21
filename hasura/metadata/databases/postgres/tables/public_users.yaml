@@ -1,0 +1,14 @@
+table:
+  name: users
+  schema: public
+configuration:
+  column_config:
+    tokenId:
+      custom_name: tokenId
+  custom_column_names:
+    tokenId: tokenId
+  custom_root_fields: {}
+object_relationships:
+  - name: email_verification_token
+    using:
+      foreign_key_constraint_on: tokenId

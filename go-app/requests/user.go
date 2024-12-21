@@ -16,7 +16,7 @@ type RegisterRequest struct {
 
 type EmailVerifyRequest struct{
 	Input struct{
-		VerificationToken string `json:"email_verification_token" validate:"required"`
+		VerificationToken string `json:"verification_token" validate:"required"`
 		UserId  int `json:"user_id" validate:"required"`
 	}`json:"input"`
 }

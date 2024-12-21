@@ -1,0 +1,60 @@
+mutation RegisterUser(
+  $username: String!
+  $email: String!
+  $password: String!
+  $phone: String!
+  $role: String!
+) {
+  RegisterUser(
+    userName: $username
+    email: $email
+    password: $password
+    phone: $phone
+    role: $role
+  ) {
+    id
+    username
+    email
+    role
+    tokenId
+  }
+}
+
+mutation VerifyEmail($token: String!, $user_id: Int!) {
+  update_users_by_pk(pk_columns: {id: $user_id}, _set: {is_email_verified: true}) {
+    id
+    username
+    email
+  }
+}
+
+
+
+# Query to check if a token exists in the email verification tokens table
+query CheckEmailVerificationToken($token: String!) {
+  email_verification_tokens(where: {token: {_eq: $token}}) {
+    id
+    token
+    user_id
+    expires_at
+  }
+}
+
+# Mutation to update the user's email verification status
+mutation UpdateUserEmailVerificationStatus($userId: Int!, $status: Boolean!) {
+  update_users_by_pk(pk_columns: {id: $userId}, _set: {is_email_verified: $status}) {
+    id
+    username
+    email
+    profile
+    role
+  }
+}
+
+# Mutation to delete the email verification token after it has been used (optional)
+mutation DeleteEmailVerificationToken($id: Int!) {
+  delete_email_verification_tokens_by_pk(id: $id) {
+    id
+  }
+}
+

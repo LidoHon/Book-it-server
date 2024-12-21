@@ -180,13 +180,23 @@ func RegisterUser() gin.HandlerFunc {
 	
 
 
-		verficationLink := os.Getenv("CHAPA_RETURN_URL") + "?verfication_token" + emailVerficationToken + "&id=" + strconv.Itoa(int(user.ID))
+		// verficationLink := os.Getenv("CHAPA_RETURN_URL") + "?verification token" + emailVerficationToken + "&user_id=" + strconv.Itoa(int(user.ID))
+		verificationLink := os.Getenv("CHAPA_RETURN_URL") + "?verification_token=" + emailVerficationToken + "&id=" + strconv.Itoa(int(user.ID))
+
+		// verficationLink := fmt.Sprintf("%s?verification_token=%s&user_id=%d",
+		// 	os.Getenv("CHAPA_RETURN_URL"),
+		// 	url.QueryEscape(emailVerficationToken),
+		// 	user.ID,
+		// 	)
+		// verficationLink := fmt.Sprintf("http://localhost:5000/api/users/verify-email?verification_token=%s&user_id=%d", emailVerficationToken, user.ID)
+
+
 		// verficationLink := "?verfication_token" + emailVerficationToken + "&id=" + strconv.Itoa(int(user.ID))
 
 		var emailForm helpers.EmailData
 		emailForm.Name = string(user.Name)
 		emailForm.Email = string(user.Email)
-		emailForm.Link = verficationLink
+		emailForm.Link = verificationLink
 		emailForm.Subject = "Verifying your email"
 
 		res, errString := helpers.SendEmail(
@@ -221,14 +231,16 @@ func RegisterUser() gin.HandlerFunc {
 }
 
 
-func verifyEmail() gin.HandlerFunc{
+func VerifyEmail() gin.HandlerFunc {
 	return func(c *gin.Context){
 		client := libs.SetupGraphqlClient()
 		var request requests.EmailVerifyRequest
+
 		if err := c.ShouldBindJSON(&request); err !=nil{
 			c.JSON(http.StatusBadRequest, gin.H{"error":"invalid input", "details": err.Error()})
 			return
 		}
+		// Validate the request body
 		validationError := validate.Struct(request)
 		if validationError !=nil{
 			c.JSON(http.StatusBadRequest, gin.H{"error":validationError.Error()})
@@ -236,12 +248,89 @@ func verifyEmail() gin.HandlerFunc{
 
 		}
 
+		// Fetch the token from the database based on the provided 
 		var query struct{
 			Tokens []struct{
 				ID graphql.Int `graphql:"id"`
 				Token graphql.String `graphql:"token"`
 				UserId graphql.Int `graphql:"user_id"`
-			}`graphql:"`
+				ExpiresAt graphql.String `graphql:"expires_at"`
+			}`graphql:"email_verification_tokens(where: {token: {_eq: $token}})"`
 		}
+		variables := map[string]interface{}{
+			"token": graphql.String(request.Input.VerificationToken),
+		}
+		 err := client.Query(context.Background(), &query, variables)
+		 if err !=nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error":"failed to query the verification token", "details": err.Error()})
+			return
+		 }
+// Check if token is found
+		 if len(query.Tokens) == 0{
+			c.JSON(http.StatusUnauthorized, gin.H{"error":"verification token expired or invalid verification token"})
+			return
+		 }
+
+
+		//  validate if the token is expired
+		expirationTime, err := time.Parse(time.RFC3339, string(query.Tokens[0].ExpiresAt))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error":"failed to parse token expiration date", "details": err.Error()})
+			return
+		}
+
+		if time.Now().After(expirationTime){
+			c.JSON(http.StatusUnauthorized, gin.H{"error":"verification token expired"})
+			return
+		}
+
+		 var mutation struct{
+			UpdateUser struct{
+				ID graphql.ID `graphql:"id"`
+				UserName graphql.String `graphql:"username"`
+				Email graphql.String `graphql:"email"`
+				Profile graphql.String `graphql:"profile"`
+				Role graphql.String `graphql:"role"`
+			}`graphql:"update_users_by_pk(pk_columns: {id: $id}, _set: {is_email_verified: $status})"`
+		 }
+
+		 mutationVariables := map[string]interface{}{
+			"id": graphql.Int(request.Input.UserId),
+			"status": graphql.Boolean(true),
+		 }
+
+		 err = client.Mutate(context.Background(), &mutation, mutationVariables)
+		 if err != nil {
+			log.Printf("Error updating user email verification status: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error":"failed to update user email verification status", "details": err.Error()})
+			return
+		 }
+
+	
+// delete the token after it has been used i will be back for this
+		// var deleteMutation struct{
+		// 	DeleteToken struct{
+		// 		ID graphql.Int `graphql:"id"`
+		// 	}`graphql:"delete_email_verification_tokens_by_pk(id: $id)"`
+		// }
+		// deleteVariables := map[string]interface{}{
+		// 	"id":query.Tokens[0].ID,
+		// }
+		// err = client.Mutate(context.Background(), &deleteMutation, deleteVariables)
+		// if err != nil{
+		// 	log.Printf("Error deleting email verification token: %v", err)
+		// 	c.JSON(http.StatusInternalServerError, gin.H{"error":"failed to delete email verification token", "details": err.Error()})
+		// 	return
+		// }
+
+		// return success message
+
+		res := struct {
+            Msg string `json:"message"`
+        }{
+            Msg: "Your email is verified successfully!",
+        }
+
+        c.JSON(http.StatusOK, res)
 	}
 }

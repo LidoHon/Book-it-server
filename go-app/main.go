@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/LidoHon/devConnect/controllers"
+	// "github.com/LidoHon/devConnect/controllers"
+	"github.com/LidoHon/devConnect/routes"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -21,8 +22,10 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger())
 
-	userRoutes := router.Group("/api/users")
-	userRoutes.POST("register", controllers.RegisterUser())
+	routes.AuthRoutes(router)
+
+	// userRoutes := router.Group("/api/users")
+	// userRoutes.POST("register", controllers.RegisterUser())
 
 	fmt.Printf("Server running on port %s", port)
 

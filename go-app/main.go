@@ -24,8 +24,6 @@ func main() {
 
 	routes.AuthRoutes(router)
 
-	// userRoutes := router.Group("/api/users")
-	// userRoutes.POST("register", controllers.RegisterUser())
 
 	fmt.Printf("Server running on port %s", port)
 

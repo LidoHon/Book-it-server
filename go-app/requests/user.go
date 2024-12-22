@@ -27,3 +27,18 @@ type LoginRequest struct {
 		Password string `json:"password"`
 	} `json:"input"`
 }
+
+type PasswordResetRequest struct {
+	Input struct {
+		Email string `json:"email" validate:"required,email"`
+	} `json:"input"`
+}
+
+
+type UpdatePasswordRequest struct {
+	Input struct {
+		Token    string `json:"token" validate:"required"`
+		UserId   int    `json:"user_id" validate:"required"`
+		Password string `json:"password" validate:"required,min=6"`
+	} `json:"input"`
+}

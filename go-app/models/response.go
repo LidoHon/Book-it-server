@@ -21,3 +21,12 @@ type LoginResponce struct {
 		Role         graphql.String `json:"role"`
 	} `json:"user"`
 }
+
+type ResetRequestOutput struct {
+	ID      graphql.Int    `json:"id"`
+	Message graphql.String `json:"message"`
+}
+
+type ResetedPasswordOutput struct {
+	Message graphql.String `json:"message"`
+}

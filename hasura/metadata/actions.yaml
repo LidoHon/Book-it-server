@@ -1,35 +1,6 @@
-version: 3
-actions:
-  - name: RegisterUser
-    definition:
-      kind: synchronous
-      handler: http://localhost:5000/api/users/register
-      forward_client_headers: true
-      request_transform:
-        method: POST
-        query_params: {}
-        template_engine: Kriti
-        version: 2
-      response_transform:
-        version: 2
-        template_engine: Kriti
-    permissions:
-      - role: anonymous
-
-  - name: VerifyEmail
-    definition:
-      kind: synchronous
-      handler: http://localhost:5000/api/users/verify-email
-      forward_client_headers: true
-      request_transform:
-        method: POST
-        query_params:
-          token: $token
-          user_id: $user_id
-        template_engine: Kriti
-        version: 2
-      response_transform:
-        version: 2
-        template_engine: Kriti
-    permissions:
-      - role: anonymous
+actions: []
+custom_types:
+  enums: []
+  input_objects: []
+  objects: []
+  scalars: []

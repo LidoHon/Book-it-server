@@ -10,3 +10,14 @@ type SignedUpUserOutput struct {
 	RefreshToken graphql.String `json:"refreshToken"`
 	Role         graphql.String `json:"role"`
 }
+
+type LoginResponce struct {
+	User struct {
+		ID           graphql.Int    `json:"id"`
+		Name         graphql.String `json:"name"`
+		Email        graphql.String `json:"email"`
+		Token        graphql.String `json:"token"`
+		RefreshToken graphql.String `json:"refreshToken"`
+		Role         graphql.String `json:"role"`
+	} `json:"user"`
+}

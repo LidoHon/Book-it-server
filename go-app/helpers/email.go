@@ -20,7 +20,6 @@ func GetTemplatePath(templateName string) string {
 	return path
 }
 
-
 type EmailData struct {
 	Name    string
 	Email   string

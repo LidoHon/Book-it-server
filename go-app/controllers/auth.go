@@ -189,16 +189,12 @@ func RegisterUser() gin.HandlerFunc {
 		// 	)
 		// verficationLink := fmt.Sprintf("http://localhost:5000/api/users/verify-email?verification_token=%s&user_id=%d", emailVerficationToken, user.ID)
 
-
-
-
 		emailForm := helpers.EmailData{
 			Name:    string(user.Name),
 			Email:   string(user.Email),
 			Link:    verificationLink,
 			Subject: "Verifying your email",
 		}
-	
 
 		res, errString := helpers.SendEmail(
 			[]string{emailForm.Email},
@@ -216,7 +212,6 @@ func RegisterUser() gin.HandlerFunc {
 			return
 
 		}
-
 
 		response := models.SignedUpUserOutput{
 			ID:           user.ID,
@@ -333,5 +328,79 @@ func VerifyEmail() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, res)
+	}
+}
+
+// login user
+
+func Login() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		client := libs.SetupGraphqlClient()
+
+		var request requests.LoginRequest
+
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "details": err.Error()})
+			return
+		}
+
+		var query struct {
+			User []struct {
+			  ID       graphql.Int    `graphql:"id"`
+			  Name     graphql.String `graphql:"username"`
+			  Email    graphql.String `graphql:"email"`
+			  Password graphql.String `graphql:"password"`
+			  Role     graphql.String `graphql:"role"`
+			  TokenId  graphql.Int `graphql:"tokenId"`
+			  IsEmailVerified graphql.Boolean `graphql:"is_email_verified"`
+			} `graphql:"users(where: {email: {_eq: $email}})"`
+		  }
+		  
+
+		variables := map[string]interface{}{
+			"email": graphql.String(request.Input.Email),
+		}
+
+		if err := client.Query(context.Background(), &query, variables); err != nil {
+			log.Printf("failed to query the user: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query user"})
+			return
+		}
+
+		if len(query.User) == 0 {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			return
+		}
+
+		user := query.User[0]
+
+		if valid, msg := helpers.VerifyPassword(request.Input.Password, string(user.Password)); !valid {
+			c.JSON(http.StatusBadRequest, gin.H{"error": msg})
+			return
+		}
+
+		token, refreshToken, err := helpers.GenerateAllTokens(string(user.Email), string(user.Name), string(user.Role), string(user.TokenId))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens", "details": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.LoginResponce{
+			User: struct {
+				ID           graphql.Int    `json:"id"`
+				Name         graphql.String `json:"name"`
+				Email        graphql.String `json:"email"`
+				Token        graphql.String `json:"token"`
+				RefreshToken graphql.String `json:"refreshToken"`
+				Role         graphql.String `json:"role"`
+			}{
+				ID:           user.ID,
+				Name:         user.Name,
+				Email:        user.Email,
+				Role:         user.Role,
+				Token:        graphql.String(token),
+				RefreshToken: graphql.String(refreshToken),
+			},
+		})
 	}
 }

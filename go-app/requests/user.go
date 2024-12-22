@@ -20,3 +20,10 @@ type EmailVerifyRequest struct {
 		UserId            int    `json:"user_id" validate:"required"`
 	} `json:"input"`
 }
+
+type LoginRequest struct {
+	Input struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	} `json:"input"`
+}

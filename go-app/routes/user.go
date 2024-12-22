@@ -11,6 +11,7 @@ func AuthRoutes(incomingRoutes *gin.Engine) {
 		// You can add more routes as needed
 		userRoutes.POST("/register", controllers.RegisterUser())
 		userRoutes.POST("/verify-email", controllers.VerifyEmail())
+		userRoutes.POST("/login", controllers.Login())
 		// userRoutes.GET("/verify-email", controllers.VerifyEmail())
 
 	}

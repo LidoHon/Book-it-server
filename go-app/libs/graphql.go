@@ -21,19 +21,17 @@ func (c *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func SetupGraphqlClient() *graphql.Client {
-
-	// return client
 	httpClient := &http.Client{
 		Transport: &customTransport{
 			transport: http.DefaultTransport,
 			headers: map[string]string{
-				"x-hasura-admin-secret": os.Getenv("HASURA_GRAPHQL_ADMIN_SECRET"),
+				"X-Hasura-Admin-Secret": os.Getenv("HASURA_GRAPHQL_ADMIN_SECRET"),
 			},
 		},
 	}
 
-	// Create a GraphQL client with the HTTP client
-	client := graphql.NewClient(os.Getenv("HASURA_GRAPHQL_API_ENDPOINT"), httpClient)
+	apiEndpoint := os.Getenv("HASURA_GRAPHQL_API_ENDPOINT")
+	client := graphql.NewClient(apiEndpoint, httpClient)
 
 	return client
 }

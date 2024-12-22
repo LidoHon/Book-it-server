@@ -25,10 +25,10 @@ func RegisterUser() gin.HandlerFunc {
 		_, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		// Declare a variable to hold the input data
+		// Declare a variable to hold the input data from the json req body
 		var request requests.RegisterRequest
 
-		// Bind the JSON request body to the input struct
+		// Bind the JSON request body to the request struct
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(400, gin.H{"error": "Invalid input data"})
 			return
@@ -36,10 +36,11 @@ func RegisterUser() gin.HandlerFunc {
 
 		// Validate the input data
 		if err := validate.Struct(request); err != nil {
-			c.JSON(400, gin.H{"error": "Validation failed", "details": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed", "details": err.Error()})
 			return
 		}
 
+		// Check if the user already exists
 		var query struct {
 			User []struct {
 				ID       graphql.Int    `graphql:"id"`
@@ -54,14 +55,14 @@ func RegisterUser() gin.HandlerFunc {
 			"email": graphql.String(request.Input.Email),
 		}
 
-		err := client.Query(context.Background(), &query, variable)
-		if err != nil {
+		if err := client.Query(context.Background(), &query, variable); err != nil {
 			log.Println("Error querying existing user:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query the existing user"})
 			return
 		}
 
 		if len(query.User) != 0 {
+			log.Println("User already exists")
 			c.JSON(http.StatusBadRequest, gin.H{"error": "User already exists"})
 			return
 
@@ -76,8 +77,9 @@ func RegisterUser() gin.HandlerFunc {
 		if !ok {
 			profilePictureURL = ""
 		}
+		// hash the password
+		password := helpers.HashPassword(request.Input.Password)
 
-		password := helpers.HashedPassword(request.Input.Password)
 		var mutation struct {
 			CreateUser struct {
 				ID       graphql.Int    `graphql:"id"`
@@ -95,13 +97,13 @@ func RegisterUser() gin.HandlerFunc {
 			"profile":  graphql.String(profilePictureURL),
 			"role":     graphql.String("user"),
 		}
-		err = client.Mutate(context.Background(), &mutation, mutationVariables)
+		err := client.Mutate(context.Background(), &mutation, mutationVariables)
 		if err != nil {
-			log.Println("Error inserting user:", err)
+			log.Println("Failed to register user:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 			return
 		}
-// query newly created user
+		// query newly created user
 		var regesteredUserQuery struct {
 			User []struct {
 				ID       graphql.Int    `graphql:"id"`
@@ -118,35 +120,35 @@ func RegisterUser() gin.HandlerFunc {
 		}
 		err = client.Query(context.Background(), &regesteredUserQuery, regesteredUserVariable)
 		if err != nil {
-			log.Println("Error querying registered user:", err)
+			log.Println("Error querying the registered user:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query the registered user"})
 			return
 		}
 		if len(regesteredUserQuery.User) == 0 {
-			c.JSON(http.StatusInternalServerError, gin.H{"error":"user not found after registration maybe he flead to another table:)"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "user not found after registration maybe he flead to another table:)"})
 		}
 		user := regesteredUserQuery.User[0]
-// generate email verification token
+		// generate email verification token
 		emailVerficationToken, err := helpers.GenerateToken()
-		
+
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate a token", "detail": err.Error()})
+			log.Println("Error generating email verification token:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate email verification token", "detail": err.Error()})
 			return
 		}
 
 		var VerficationEmailMutation struct {
 			InsertedToken struct {
-				ID     graphql.Int    `graphql:"id"`
-				Token  graphql.String `graphql:"token"`
+				ID    graphql.Int    `graphql:"id"`
+				Token graphql.String `graphql:"token"`
 			} `graphql:"insert_email_verification_tokens_one(object: {token: $token, user_id: $userId})"`
 		}
 
 		// "insert_email_verification_tokens_one(object: {token: $token, user_id: $userId})"
-		
+
 		verficatonEmailVariable := map[string]interface{}{
 			"token":  graphql.String(emailVerficationToken),
 			"userId": graphql.Int(user.ID),
-			
 		}
 
 		err = client.Mutate(context.Background(), &VerficationEmailMutation, verficatonEmailVariable)
@@ -156,16 +158,15 @@ func RegisterUser() gin.HandlerFunc {
 			return
 		}
 
-
 		var UpdateUserTokenMutation struct {
 			UpdatedUser struct {
 				ID      graphql.Int `graphql:"id"`
-				TokenID graphql.Int `graphql:"tokenId"` // Use "tokenId" exactly as it's named in the database
+				TokenID graphql.Int `graphql:"tokenId"`
 			} `graphql:"update_users_by_pk(pk_columns: {id: $userId}, _set: {tokenId: $tokenId})"`
 		}
 
-		updatedUserVariables :=map[string]interface{}{
-			"userId": graphql.Int(user.ID),
+		updatedUserVariables := map[string]interface{}{
+			"userId":  graphql.Int(user.ID),
 			"tokenId": VerficationEmailMutation.InsertedToken.ID,
 		}
 
@@ -177,8 +178,6 @@ func RegisterUser() gin.HandlerFunc {
 			return
 		}
 		log.Printf("User %d successfully updated with tokenId %d", user.ID, UpdateUserTokenMutation.UpdatedUser.TokenID)
-	
-
 
 		// verficationLink := os.Getenv("CHAPA_RETURN_URL") + "?verification token" + emailVerficationToken + "&user_id=" + strconv.Itoa(int(user.ID))
 		verificationLink := os.Getenv("CHAPA_RETURN_URL") + "?verification_token=" + emailVerficationToken + "&id=" + strconv.Itoa(int(user.ID))
@@ -191,13 +190,15 @@ func RegisterUser() gin.HandlerFunc {
 		// verficationLink := fmt.Sprintf("http://localhost:5000/api/users/verify-email?verification_token=%s&user_id=%d", emailVerficationToken, user.ID)
 
 
-		// verficationLink := "?verfication_token" + emailVerficationToken + "&id=" + strconv.Itoa(int(user.ID))
 
-		var emailForm helpers.EmailData
-		emailForm.Name = string(user.Name)
-		emailForm.Email = string(user.Email)
-		emailForm.Link = verificationLink
-		emailForm.Subject = "Verifying your email"
+
+		emailForm := helpers.EmailData{
+			Name:    string(user.Name),
+			Email:   string(user.Email),
+			Link:    verificationLink,
+			Subject: "Verifying your email",
+		}
+	
 
 		res, errString := helpers.SendEmail(
 			[]string{emailForm.Email},
@@ -211,18 +212,20 @@ func RegisterUser() gin.HandlerFunc {
 
 		token, refreshToken, err := helpers.GenerateAllTokens(string(user.Email), string(user.Name), string(user.Role), string(user.TokenId))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to  generate jwt token", "details": err.Error()})
 			return
 
 		}
 
-		response := models.SignedUpUserOutput{}
-		response.ID = user.ID
-		response.Name = user.Name
-		response.Email = user.Email
-		response.Token = graphql.String(token)
-		response.Role = user.Role
-		response.RefreshToken = graphql.String(refreshToken)
+
+		response := models.SignedUpUserOutput{
+			ID:           user.ID,
+			Name:         user.Name,
+			Email:        user.Email,
+			Token:        graphql.String(token),
+			Role:         user.Role,
+			RefreshToken: graphql.String(refreshToken),
+		}
 
 		c.JSON(http.StatusOK, response)
 
@@ -230,84 +233,82 @@ func RegisterUser() gin.HandlerFunc {
 
 }
 
-
 func VerifyEmail() gin.HandlerFunc {
-	return func(c *gin.Context){
+	return func(c *gin.Context) {
 		client := libs.SetupGraphqlClient()
+
 		var request requests.EmailVerifyRequest
 
-		if err := c.ShouldBindJSON(&request); err !=nil{
-			c.JSON(http.StatusBadRequest, gin.H{"error":"invalid input", "details": err.Error()})
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
 			return
 		}
 		// Validate the request body
 		validationError := validate.Struct(request)
-		if validationError !=nil{
-			c.JSON(http.StatusBadRequest, gin.H{"error":validationError.Error()})
+		if validationError != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationError.Error()})
 			return
 
 		}
 
-		// Fetch the token from the database based on the provided 
-		var query struct{
-			Tokens []struct{
-				ID graphql.Int `graphql:"id"`
-				Token graphql.String `graphql:"token"`
-				UserId graphql.Int `graphql:"user_id"`
+		// Fetch the token from the database based on the provided
+		var query struct {
+			Tokens []struct {
+				ID        graphql.Int    `graphql:"id"`
+				Token     graphql.String `graphql:"token"`
+				UserId    graphql.Int    `graphql:"user_id"`
 				ExpiresAt graphql.String `graphql:"expires_at"`
-			}`graphql:"email_verification_tokens(where: {token: {_eq: $token}})"`
+			} `graphql:"email_verification_tokens(where: {token: {_eq: $token}})"`
 		}
 		variables := map[string]interface{}{
 			"token": graphql.String(request.Input.VerificationToken),
 		}
-		 err := client.Query(context.Background(), &query, variables)
-		 if err !=nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error":"failed to query the verification token", "details": err.Error()})
+		err := client.Query(context.Background(), &query, variables)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to query the verification token", "details": err.Error()})
 			return
-		 }
-// Check if token is found
-		 if len(query.Tokens) == 0{
-			c.JSON(http.StatusUnauthorized, gin.H{"error":"verification token expired or invalid verification token"})
+		}
+		// Check if token is found
+		if len(query.Tokens) == 0 {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid verification token"})
 			return
-		 }
-
+		}
 
 		//  validate if the token is expired
 		expirationTime, err := time.Parse(time.RFC3339, string(query.Tokens[0].ExpiresAt))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error":"failed to parse token expiration date", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse token expiration date", "details": err.Error()})
 			return
 		}
 
-		if time.Now().After(expirationTime){
-			c.JSON(http.StatusUnauthorized, gin.H{"error":"verification token expired"})
+		if time.Now().After(expirationTime) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "expired verification token"})
 			return
 		}
 
-		 var mutation struct{
-			UpdateUser struct{
-				ID graphql.ID `graphql:"id"`
+		var mutation struct {
+			UpdateUser struct {
+				ID       graphql.ID     `graphql:"id"`
 				UserName graphql.String `graphql:"username"`
-				Email graphql.String `graphql:"email"`
-				Profile graphql.String `graphql:"profile"`
-				Role graphql.String `graphql:"role"`
-			}`graphql:"update_users_by_pk(pk_columns: {id: $id}, _set: {is_email_verified: $status})"`
-		 }
+				Email    graphql.String `graphql:"email"`
+				Profile  graphql.String `graphql:"profile"`
+				Role     graphql.String `graphql:"role"`
+			} `graphql:"update_users_by_pk(pk_columns: {id: $id}, _set: {is_email_verified: $status})"`
+		}
 
-		 mutationVariables := map[string]interface{}{
-			"id": graphql.Int(request.Input.UserId),
+		mutationVariables := map[string]interface{}{
+			"id":     graphql.Int(request.Input.UserId),
 			"status": graphql.Boolean(true),
-		 }
+		}
 
-		 err = client.Mutate(context.Background(), &mutation, mutationVariables)
-		 if err != nil {
+		err = client.Mutate(context.Background(), &mutation, mutationVariables)
+		if err != nil {
 			log.Printf("Error updating user email verification status: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error":"failed to update user email verification status", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user email verification status", "details": err.Error()})
 			return
-		 }
+		}
 
-	
-// delete the token after it has been used i will be back for this
+		// delete the token after it has been used i will be back for this
 		// var deleteMutation struct{
 		// 	DeleteToken struct{
 		// 		ID graphql.Int `graphql:"id"`
@@ -326,11 +327,11 @@ func VerifyEmail() gin.HandlerFunc {
 		// return success message
 
 		res := struct {
-            Msg string `json:"message"`
-        }{
-            Msg: "Your email is verified successfully!",
-        }
+			Msg string `json:"message"`
+		}{
+			Msg: "Your email is verified successfully!",
+		}
 
-        c.JSON(http.StatusOK, res)
+		c.JSON(http.StatusOK, res)
 	}
 }

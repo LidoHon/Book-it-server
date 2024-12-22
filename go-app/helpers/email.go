@@ -15,9 +15,11 @@ func GetTemplatePath(templateName string) string {
 	if err != nil {
 		log.Fatalf("Error getting current working directory: %v", err)
 	}
+	path := filepath.Join(dir, "templates", templateName)
 
-	return filepath.Join(dir, "templates", templateName)
+	return path
 }
+
 
 type EmailData struct {
 	Name    string
@@ -56,7 +58,6 @@ func SendEmail(to []string, templateName string, data EmailData) (bool, string) 
 	)
 	if err != nil {
 		log.Printf("error sending email: %v", err)
-		// log.Panic("error sending problem:", err.Error())
 		return false, err.Error()
 	}
 	return true, ""

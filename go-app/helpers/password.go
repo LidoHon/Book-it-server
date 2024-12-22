@@ -6,7 +6,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func HashedPassword(password string) string {
+func HashPassword(password string) string {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		log.Panic(err)
@@ -16,12 +16,10 @@ func HashedPassword(password string) string {
 
 func VerifyPassword(userPassword string, hashedpassword string) (bool, string) {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedpassword), []byte(userPassword))
-	check := true
-	msg := ""
+
 	if err != nil {
-		msg = "login or password incorrect"
-		check = false
+		return false, "incorrect credentials"
 
 	}
-	return check, msg
+	return true, ""
 }

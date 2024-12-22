@@ -13,6 +13,7 @@ func AuthRoutes(incomingRoutes *gin.Engine) {
 		userRoutes.POST("/verify-email", controllers.VerifyEmail())
 		userRoutes.POST("/login", controllers.Login())
 		userRoutes.POST("/reset-password", controllers.ResetPassword())
+		userRoutes.POST("/update-password", controllers.UpdatePassword())
 		// userRoutes.GET("/verify-email", controllers.VerifyEmail())
 
 	}

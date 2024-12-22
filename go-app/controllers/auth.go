@@ -596,7 +596,7 @@ func UpdatePassword() gin.HandlerFunc {
 		}
 
 		sucess, errorString := helpers.SendEmail(
-			[]string{emailForm.Email}, "resetPasswordSucess.html", emailForm,
+			[]string{emailForm.Email}, "resetPasswordSuccess.html", emailForm,
 		)
 		if !sucess {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send password reset email", "details": errorString})

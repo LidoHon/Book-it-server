@@ -24,7 +24,6 @@ func main() {
 
 	routes.AuthRoutes(router)
 
-
 	fmt.Printf("Server running on port %s", port)
 
 	router.Run(":" + port)

@@ -34,7 +34,6 @@ type PasswordResetRequest struct {
 	} `json:"input"`
 }
 
-
 type UpdatePasswordRequest struct {
 	Input struct {
 		Token    string `json:"token" validate:"required"`

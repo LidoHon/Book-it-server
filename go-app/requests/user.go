@@ -103,3 +103,13 @@ type UpdateRequest struct {
 		Image    *models.ImageInput `json:"image"`
 	} `json:"input"`
 }
+
+type DeleteUserRequest struct {
+	Input struct {
+		ID int `json:"id" validate:"required"`
+	}
+}
+
+type DeleteUserWithEmailInput struct {
+	UserID int `json:"userId"`
+}

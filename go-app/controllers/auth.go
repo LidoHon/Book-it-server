@@ -31,7 +31,8 @@ func RegisterUser() gin.HandlerFunc {
 
 		// Bind the JSON request body to the request struct
 		if err := c.ShouldBindJSON(&request); err != nil {
-			c.JSON(400, gin.H{"error": "Invalid input data"})
+			log.Printf("Validation error: %v\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input data"})
 			return
 		}
 
@@ -213,21 +214,39 @@ func RegisterUser() gin.HandlerFunc {
 			return
 
 		}
+		response := models.SignupResponse{
+			Data: struct {
+				Signup models.SignedUpUserOutput `json:"signup"`
+			}{
+				Signup: models.SignedUpUserOutput{
+					ID:           graphql.Int(user.ID),
+					UserName:     user.Name,
+					Email:        user.Email,
+					Token:        graphql.String(token),
+					Role:         user.Role,
+					RefreshToken: graphql.String(refreshToken),
+				},
+			},
+			}
+			fmt.Println(response)
 
-		response := models.SignedUpUserOutput{
-			ID:           user.ID,
-			Name:         user.Name,
-			Email:        user.Email,
-			Token:        graphql.String(token),
-			Role:         user.Role,
-			RefreshToken: graphql.String(refreshToken),
+			c.JSON(http.StatusOK, response)
 		}
 
-		c.JSON(http.StatusOK, response)
+		// response := models.SignedUpUserOutput{
+		// 	ID:           user.ID,
+		// 	UserName:     user.Name,
+		// 	Email:        user.Email,
+		// 	Token:        graphql.String(token),
+		// 	Role:         user.Role,
+		// 	RefreshToken: graphql.String(refreshToken),
+		// }
+
+		
 
 	}
 
-}
+// }
 
 func VerifyEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -341,7 +360,7 @@ func Login() gin.HandlerFunc {
 		var request requests.LoginRequest
 
 		if err := c.ShouldBindJSON(&request); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "details": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input", "details": err.Error()})
 			return
 		}
 
@@ -362,46 +381,51 @@ func Login() gin.HandlerFunc {
 		}
 
 		if err := client.Query(context.Background(), &query, variables); err != nil {
-			log.Printf("failed to query the user: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query user"})
+			log.Printf("failed to query the user with email %s: %v", request.Input.Email, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to query user"})
 			return
 		}
 
 		if len(query.User) == 0 {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
+			return
+
+		}
+		user := query.User[0]
+
+		if !user.IsEmailVerified {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "You need to verify your account first to login"})
 			return
 		}
 
-		user := query.User[0]
 
 		if valid, msg := helpers.VerifyPassword(request.Input.Password, string(user.Password)); !valid {
-			c.JSON(http.StatusBadRequest, gin.H{"error": msg})
+			c.JSON(http.StatusBadRequest, gin.H{"message": msg})
 			return
 		}
 
 		token, refreshToken, err := helpers.GenerateAllTokens(string(user.Email), string(user.Name), string(user.Role), string(user.TokenId))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to generate tokens",
+				"details": err.Error(),
+			})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.LoginResponce{
-			User: struct {
-				ID           graphql.Int    `json:"id"`
-				Name         graphql.String `json:"name"`
-				Email        graphql.String `json:"email"`
-				Token        graphql.String `json:"token"`
-				RefreshToken graphql.String `json:"refreshToken"`
-				Role         graphql.String `json:"role"`
-			}{
+		response := models.LoginResponse{
+			User: &models.UserResponse{
 				ID:           user.ID,
-				Name:         user.Name,
-				Email:        user.Email,
-				Role:         user.Role,
 				Token:        graphql.String(token),
 				RefreshToken: graphql.String(refreshToken),
+				Email:        graphql.String(user.Email),
+				Name:         graphql.String(user.Name),
+				Role:         graphql.String(user.Role),
 			},
-		})
+		}
+
+		c.JSON(http.StatusOK, response)
+
 	}
 }
 
@@ -425,6 +449,7 @@ func ResetPassword() gin.HandlerFunc {
 				Password graphql.String `graphql:"password"`
 				Role     graphql.String `graphql:"role"`
 				TokenId  graphql.Int    `graphql:"tokenId"`
+				IsEmailVerified graphql.Boolean `graphql:"is_email_verified"`
 			} `graphql:"users(where: {email: {_eq: $email}})"`
 		}
 		queryVars := map[string]interface{}{
@@ -443,6 +468,10 @@ func ResetPassword() gin.HandlerFunc {
 		}
 
 		user := query.User[0]
+		if !user.IsEmailVerified{
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Please verify your email first to reset your password"})
+			return
+		}
 
 		token, err := helpers.GenerateToken()
 		if err != nil {
@@ -519,7 +548,7 @@ func ResetPassword() gin.HandlerFunc {
 
 		response := models.ResetRequestOutput{
 			ID:      mutation.InsertedToken.ID,
-			Message: "Please go a head anc check your email to reset your password",
+			Message: "we have sent you an email to reset your password, please go and check your email to reset your password",
 		}
 
 		c.JSON(http.StatusOK, response)
@@ -603,9 +632,14 @@ func UpdatePassword() gin.HandlerFunc {
 			return
 		}
 
-		response := models.ResetedPasswordOutput{
-			Message: "your password has been reseted sucessfully! proceed login",
-		}
+		response := models.UpdatePasswordResponse{
+            Data: struct {
+                PasswordUpdate interface{} `json:"passwordUpdate"`
+            }{
+                PasswordUpdate: nil, 
+            },
+        }
+
 		c.JSON(http.StatusOK, response)
 
 		// delete the token after it has been used
@@ -661,5 +695,167 @@ func DeleteUser() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Something went wrong", "details": "Invalid input"})
+	}
+}
+
+func UpdateProfile() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		client := libs.SetupGraphqlClient()
+
+		var req requests.UpdateRequest
+
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
+			return
+		}
+
+		if validationErr := validate.Struct(req); validationErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
+			return
+		}
+
+		imageUrl, exists := c.Get("imageUrl")
+		if !exists {
+			imageUrl = ""
+		}
+
+		proPicUrl, ok := imageUrl.(string)
+		if !ok {
+			proPicUrl = ""
+		}
+
+		if proPicUrl == "" {
+			var mutation struct {
+				UpdateProfile struct {
+					ID graphql.Int `graphql:"id"`
+				} `graphql:"update_users_by_pk(pk_columns: {id: userId}, _set: {username: $userName, phone: $Phone})"`
+			}
+
+			mutationVars := map[string]interface{}{
+				"userId":   graphql.Int(req.Input.UserId),
+				"userName": graphql.String(req.Input.UserName),
+				"Phone":    graphql.String(req.Input.Phone),
+			}
+
+			err := client.Mutate(context.Background(), &mutation, mutationVars)
+			if err != nil {
+				log.Println("Failed to update user profile:", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user profile"})
+				return
+			}
+
+			res := models.UpdateResponce{
+				Message: "Profile updated successfully",
+			}
+			c.JSON(http.StatusOK, res)
+		} else {
+			var mutation struct {
+				UpdateProfile struct {
+					ID graphql.Int `graphql:"id"`
+				} `graphql:"update_users_by_pk(pk_columns: {id: userId}, _set: {username: $userName, phone: $Phone, profile: $Profile})"`
+			}
+
+			mutationVars := map[string]interface{}{
+				"userId":   graphql.Int(req.Input.UserId),
+				"userName": graphql.String(req.Input.UserName),
+				"Phone":    graphql.String(req.Input.Phone),
+				"Profile":  graphql.String(proPicUrl),
+			}
+
+			err := client.Mutate(context.Background(), &mutation, mutationVars)
+			if err != nil {
+				log.Println("Failed to update user profile:", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user profile"})
+				return
+			}
+			res := models.UpdateResponce{
+				Message: "Profile updated successfully",
+			}
+
+			c.JSON(http.StatusOK, res)
+		}
+
+	}
+
+}
+
+func DeleteUserByEmail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		client := libs.SetupGraphqlClient()
+
+		var input requests.DeleteUserWithEmailInput
+		if err := c.ShouldBindBodyWithJSON(&input); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "details": err.Error()})
+			return
+		}
+
+		var query struct {
+			User struct {
+				ID       graphql.Int    `graphql:"id"`
+				Email    graphql.String `graphql:"email"`
+				UserName graphql.String `graphql:"username"`
+			} `graphql:"users_by_pk(id: $id)"`
+		}
+
+		queryVars := map[string]interface{}{
+			"id": graphql.Int(input.UserID),
+		}
+
+		if err := client.Query(context.Background(), &query, queryVars); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query user data", "details": err.Error()})
+			return
+		}
+
+		var mutation struct {
+			DeleteUser struct {
+				ID graphql.Int `graphql:"id"`
+			} `graphql:"delete_users_by_pk(id: $id)"`
+		}
+
+		mutationVars := map[string]interface{}{
+			"id": graphql.Int(input.UserID),
+		}
+
+		if err := client.Mutate(context.Background(), &mutation, mutationVars); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user", "details": err.Error()})
+			return
+		}
+		emailData := helpers.EmailData{
+			Name:    string(query.User.UserName),
+			Email:   string(query.User.Email),
+			Subject: "Account Deletion Confirmation",
+		}
+
+		success, errorString := helpers.SendEmail(
+			[]string{emailData.Email},
+			"deletedAccount.html", emailData,
+		)
+
+		if !success {
+			// Undo the deletion if email fails
+			var undoMutation struct {
+				InsertUser struct {
+					ID graphql.Int `graphql:"id"`
+				} `graphql:"insert_users_one(object: {id: $id, email: $email, user_name: $userName})"`
+			}
+			undoVars := map[string]interface{}{
+				"id":       graphql.Int(query.User.ID),
+				"email":    graphql.String(query.User.Email),
+				"userName": graphql.String(query.User.UserName),
+			}
+			if undoErr := client.Mutate(context.Background(), &undoMutation, undoVars); undoErr != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to rollback deletion", "details": undoErr.Error()})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email, deletion rolled back", "details": errorString})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.DeleteUserWithEmailResponse{
+			Status:  "success",
+			Message: "User deleted and email sent successfully",
+		})
 	}
 }

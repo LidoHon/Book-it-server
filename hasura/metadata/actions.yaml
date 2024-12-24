@@ -1,6 +1,102 @@
-actions: []
+actions:
+  - name: editUploadedImages
+    definition:
+      kind: synchronous
+      handler: http://172.17.0.1:4000/movie/update/images
+      forward_client_headers: true
+      request_transform:
+        method: POST
+        query_params: {}
+        template_engine: Kriti
+        version: 2
+    permissions:
+      - role: systemadmin
+  - name: login
+    definition:
+      kind: ""
+      handler: http://192.168.0.40:5000/api/users/login
+      forward_client_headers: true
+      request_transform:
+        method: POST
+        query_params: {}
+        template_engine: Kriti
+        version: 2
+    permissions:
+      - role: anonimous
+  - name: passwordResetRequest
+    definition:
+      kind: synchronous
+      handler: http://192.168.0.40:5000/api/users/reset-password
+      forward_client_headers: true
+      request_transform:
+        method: POST
+        query_params: {}
+        template_engine: Kriti
+        version: 2
+    permissions:
+      - role: anonimous
+  - name: passwordUpdate
+    definition:
+      kind: synchronous
+      handler: http://192.168.0.40:5000/api/users/reset-password
+      forward_client_headers: true
+      request_transform:
+        method: POST
+        query_params: {}
+        template_engine: Kriti
+        version: 2
+    permissions:
+      - role: anonimous
+  - name: signup
+    definition:
+      kind: synchronous
+      handler: http://192.168.0.40:5000/api/users/register
+      forward_client_headers: true
+      request_transform:
+        method: POST
+        query_params: {}
+        template_engine: Kriti
+        version: 2
+    permissions:
+      - role: anonimous
+  - name: updateProfile
+    definition:
+      kind: synchronous
+      handler: http://192.168.0.40:5000/api/users/update-profile
+      forward_client_headers: true
+      request_transform:
+        method: POST
+        query_params: {}
+        template_engine: Kriti
+        version: 2
+    permissions:
+      - role: systemadmin
+      - role: user
+  - name: verifyEmail
+    definition:
+      kind: synchronous
+      handler: http://192.168.0.40:5000/api/users/verify-email
+      forward_client_headers: true
+      request_transform:
+        method: POST
+        query_params: {}
+        template_engine: Kriti
+        version: 2
+    permissions:
+      - role: user
+      - role: systemadmin
 custom_types:
   enums: []
-  input_objects: []
-  objects: []
+  input_objects:
+    - name: ImageInfo
+  objects:
+    - name: LoginResponce
+    - name: SignedUpUserOutput
+    - name: UploadResponce
+    - name: RegisteredMovieOutput
+    - name: User
+    - name: ReservedTicketOutput
+    - name: ResetRequestOutput
+    - name: ResetedPasswordOutput
+    - name: UpdateResponce
   scalars: []

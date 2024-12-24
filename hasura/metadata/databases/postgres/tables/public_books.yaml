@@ -1,0 +1,18 @@
+table:
+  name: books
+  schema: public
+array_relationships:
+  - name: RentedBooks
+    using:
+      foreign_key_constraint_on:
+        column: book_id
+        table:
+          name: RentedBooks
+          schema: public
+  - name: wishlists
+    using:
+      foreign_key_constraint_on:
+        column: book_id
+        table:
+          name: wishlist
+          schema: public

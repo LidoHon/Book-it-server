@@ -1,0 +1,113 @@
+type Mutation {
+  editUploadedImages(
+    movie_id: Int!
+    images: [ImageInfo!]!
+  ): [UploadResponce!]!
+}
+
+type Query {
+  login(
+    email: String!
+    password: String!
+  ): LoginResponce
+}
+
+type Mutation {
+  passwordResetRequest(
+    email: String!
+  ): ResetRequestOutput!
+}
+
+type Mutation {
+  passwordUpdate(
+    token: String!
+    user_id: Int!
+    password: String!
+  ): ResetedPasswordOutput!
+}
+
+type Mutation {
+  signup(
+    userName: String!
+    email: String!
+    phone: String!
+    password: String!
+    image: ImageInfo
+  ): SignedUpUserOutput!
+}
+
+type Mutation {
+  updateProfile(
+    userName: String!
+    phone: String!
+    user_id: Int!
+    image: ImageInfo
+  ): UpdateResponce!
+}
+
+type Mutation {
+  verifyEmail(
+    verification_token: String!
+    user_id: Int!
+  ): ResetedPasswordOutput!
+}
+
+input ImageInfo {
+  name: String
+  type: String
+  base64String: String
+}
+
+type LoginResponce {
+  user: User
+}
+
+type SignedUpUserOutput {
+  id: Int!
+  userName: String!
+  email: String!
+  token: String!
+  role: String!
+  refreshToken: String!
+}
+
+type UploadResponce {
+  url: String!
+}
+
+type RegisteredMovieOutput {
+  id: Int!
+  title: String!
+  description: String!
+  duration: String!
+  genre_id: Int!
+  director_id: Int!
+}
+
+type User {
+  id: Int!
+  name: String!
+  email: String!
+  token: String!
+  role: String!
+  refreshToken: String!
+}
+
+type ReservedTicketOutput {
+  id: Int!
+  payment_url: String!
+}
+
+type ResetRequestOutput {
+  id: Int!
+  message: String!
+}
+
+type ResetedPasswordOutput {
+  message: String!
+}
+
+type UpdateResponce {
+  message: String!
+}
+

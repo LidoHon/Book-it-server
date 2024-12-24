@@ -12,3 +12,43 @@ object_relationships:
   - name: email_verification_token
     using:
       foreign_key_constraint_on: tokenId
+array_relationships:
+  - name: RentedBooks
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: RentedBooks
+          schema: public
+  - name: email_verification_tokens
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: email_verification_tokens
+          schema: public
+  - name: notifications
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: notification
+          schema: public
+  - name: wishlists
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: wishlist
+          schema: public
+event_triggers:
+  - name: delete_user
+    definition:
+      delete:
+        columns: '*'
+      enable_manual: false
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: http://localhost:5000/api/users/delete

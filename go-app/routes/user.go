@@ -15,6 +15,7 @@ func AuthRoutes(incomingRoutes *gin.Engine) {
 		userRoutes.POST("/reset-password", controllers.ResetPassword())
 		userRoutes.POST("/update-password", controllers.UpdatePassword())
 		userRoutes.POST("/delete", controllers.DeleteUser())
+		userRoutes.POST("/update-profile", controllers.UpdateProfile())
 		// userRoutes.GET("/verify-email", controllers.VerifyEmail())
 
 	}

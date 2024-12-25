@@ -3,11 +3,10 @@ package models
 import "github.com/shurcooL/graphql"
 
 type SignupResponse struct {
-    Data struct {
-        Signup SignedUpUserOutput `json:"signup"`
-    } `json:"data"`
+	Data struct {
+		Signup SignedUpUserOutput `json:"signup"`
+	} `json:"data"`
 }
-
 
 type SignedUpUserOutput struct {
 	ID           graphql.Int    `json:"id"`
@@ -52,9 +51,7 @@ type ResetedPasswordOutput struct {
 }
 
 type UpdatePasswordResponse struct {
-    Data struct {
-        PasswordUpdate interface{} `json:"passwordUpdate"`
-    } `json:"data"`
+	Message graphql.String `json:"message"`
 }
 
 type UpdateResponce struct {
@@ -68,4 +65,19 @@ type DeleteResponse struct {
 type DeleteUserWithEmailResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
+}
+
+type ErrorResponse struct {
+	Message string `json:"message"`
+	Details string `json:"details,omitempty"`
+}
+
+
+type CreatedBooksOutput struct{
+	ID graphql.Int `graphql:"id"`
+	Title graphql.String `graphql:"title"`
+	Author graphql.String `graphql:"author"`
+	Available graphql.Boolean `graphql:"available"`
+	BookImage graphql.String `graphql:"bookImage"`
+	Genre graphql.String `graphql:"genre"`
 }

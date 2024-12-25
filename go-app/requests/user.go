@@ -37,11 +37,9 @@ type PasswordResetRequest struct {
 }
 
 type UpdatePasswordRequest struct {
-	Input struct {
-		Token    string `json:"token" validate:"required"`
-		UserId   int    `json:"user_id" validate:"required"`
-		Password string `json:"password" validate:"required,min=6"`
-	} `json:"input"`
+	Token    string `json:"token" validate:"required"`
+	UserId   int    `json:"user_id" validate:"required"`
+	Password string `json:"password" validate:"required,min=6"`
 }
 
 type EventPayload struct {
@@ -96,12 +94,10 @@ type TraceContext struct {
 }
 
 type UpdateRequest struct {
-	Input struct {
-		UserName string             `json:"userName" validate:"required"`
-		Phone    string             `json:"phone" validate:"required"`
-		UserId   int                `json:"user_id" validate:"required"`
-		Image    *models.ImageInput `json:"image"`
-	} `json:"input"`
+	UserName string             `json:"userName" validate:"required"`
+	Phone    string             `json:"phone" validate:"required"`
+	UserId   int                `json:"user_id" validate:"required"`
+	Image    *models.ImageInput `json:"image"`
 }
 
 type DeleteUserRequest struct {

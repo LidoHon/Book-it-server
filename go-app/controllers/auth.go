@@ -214,39 +214,38 @@ func RegisterUser() gin.HandlerFunc {
 			return
 
 		}
-		response := models.SignupResponse{
-			Data: struct {
-				Signup models.SignedUpUserOutput `json:"signup"`
-			}{
-				Signup: models.SignedUpUserOutput{
-					ID:           graphql.Int(user.ID),
-					UserName:     user.Name,
-					Email:        user.Email,
-					Token:        graphql.String(token),
-					Role:         user.Role,
-					RefreshToken: graphql.String(refreshToken),
-				},
-			},
-			}
-			fmt.Println(response)
+		// response := models.SignupResponse{
+		// 	Data: struct {
+		// 		Signup models.SignedUpUserOutput `json:"signup"`
+		// 	}{
+		// 		Signup: models.SignedUpUserOutput{
+		// 			ID:           graphql.Int(user.ID),
+		// 			UserName:     user.Name,
+		// 			Email:        user.Email,
+		// 			Token:        graphql.String(token),
+		// 			Role:         user.Role,
+		// 			RefreshToken: graphql.String(refreshToken),
+		// 		},
+		// 	},
+		// 	}
+		// 	fmt.Println(response)
 
-			c.JSON(http.StatusOK, response)
-		}
-
-		// response := models.SignedUpUserOutput{
-		// 	ID:           user.ID,
-		// 	UserName:     user.Name,
-		// 	Email:        user.Email,
-		// 	Token:        graphql.String(token),
-		// 	Role:         user.Role,
-		// 	RefreshToken: graphql.String(refreshToken),
+		// 	c.JSON(http.StatusOK, response)
 		// }
 
-		
+		response := models.SignedUpUserOutput{
+			ID:           user.ID,
+			UserName:     user.Name,
+			Email:        user.Email,
+			Token:        graphql.String(token),
+			Role:         user.Role,
+			RefreshToken: graphql.String(refreshToken),
+		}
+		c.JSON(http.StatusOK, response)
 
 	}
 
-// }
+}
 
 func VerifyEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -398,7 +397,6 @@ func Login() gin.HandlerFunc {
 			return
 		}
 
-
 		if valid, msg := helpers.VerifyPassword(request.Input.Password, string(user.Password)); !valid {
 			c.JSON(http.StatusBadRequest, gin.H{"message": msg})
 			return
@@ -443,12 +441,12 @@ func ResetPassword() gin.HandlerFunc {
 		// fetch user by email
 		var query struct {
 			User []struct {
-				ID       graphql.Int    `graphql:"id"`
-				Name     graphql.String `graphql:"username"`
-				Email    graphql.String `graphql:"email"`
-				Password graphql.String `graphql:"password"`
-				Role     graphql.String `graphql:"role"`
-				TokenId  graphql.Int    `graphql:"tokenId"`
+				ID              graphql.Int     `graphql:"id"`
+				Name            graphql.String  `graphql:"username"`
+				Email           graphql.String  `graphql:"email"`
+				Password        graphql.String  `graphql:"password"`
+				Role            graphql.String  `graphql:"role"`
+				TokenId         graphql.Int     `graphql:"tokenId"`
 				IsEmailVerified graphql.Boolean `graphql:"is_email_verified"`
 			} `graphql:"users(where: {email: {_eq: $email}})"`
 		}
@@ -468,7 +466,7 @@ func ResetPassword() gin.HandlerFunc {
 		}
 
 		user := query.User[0]
-		if !user.IsEmailVerified{
+		if !user.IsEmailVerified {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Please verify your email first to reset your password"})
 			return
 		}
@@ -564,12 +562,12 @@ func UpdatePassword() gin.HandlerFunc {
 
 		if err := c.ShouldBind(&request); err != nil {
 			log.Printf("error binding request: %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
 			return
 		}
 
 		if validationError := validate.Struct(request); validationError != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "validation failed", "details": validationError.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "validation failed", "details": validationError.Error()})
 			return
 		}
 
@@ -581,7 +579,7 @@ func UpdatePassword() gin.HandlerFunc {
 			} `graphql:"email_verification_tokens(where: {token: {_eq: $token}})"`
 		}
 		queryVars := map[string]interface{}{
-			"token": graphql.String(request.Input.Token),
+			"token": graphql.String(request.Token),
 		}
 
 		if err := client.Query(context.Background(), &query, queryVars); err != nil {
@@ -591,11 +589,11 @@ func UpdatePassword() gin.HandlerFunc {
 		}
 
 		if len(query.Tokens) == 0 {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid tokens"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid tokens"})
 			return
 		}
 
-		password := helpers.HashPassword(request.Input.Password)
+		password := helpers.HashPassword(request.Password)
 
 		var mutation struct {
 			UpdateUser struct {
@@ -608,14 +606,14 @@ func UpdatePassword() gin.HandlerFunc {
 		}
 
 		mutationVars := map[string]interface{}{
-			"id":       graphql.Int(request.Input.UserId),
+			"id":       graphql.Int(request.UserId),
 			"password": graphql.String(password),
 		}
 
 		err := client.Mutate(context.Background(), &mutation, mutationVars)
 		if err != nil {
 			log.Printf("failed to update the password: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update the password", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to update the password", "details": err.Error()})
 			return
 		}
 		emailForm := helpers.EmailData{
@@ -628,17 +626,14 @@ func UpdatePassword() gin.HandlerFunc {
 			[]string{emailForm.Email}, "resetPasswordSuccess.html", emailForm,
 		)
 		if !sucess {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send password reset email", "details": errorString})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to send password reset email", "details": errorString})
 			return
 		}
 
 		response := models.UpdatePasswordResponse{
-            Data: struct {
-                PasswordUpdate interface{} `json:"passwordUpdate"`
-            }{
-                PasswordUpdate: nil, 
-            },
-        }
+			Message: "your password has been reseted successfully",
+		}
+		log.Println(response)
 
 		c.JSON(http.StatusOK, response)
 
@@ -654,7 +649,7 @@ func UpdatePassword() gin.HandlerFunc {
 		err = client.Mutate(context.Background(), &deleteMutation, deleteVariables)
 		if err != nil {
 			log.Printf("Error deleting email verification token: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete email verification token", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to delete email verification token", "details": err.Error()})
 			return
 		}
 
@@ -705,12 +700,17 @@ func UpdateProfile() gin.HandlerFunc {
 		var req requests.UpdateRequest
 
 		if err := c.ShouldBindJSON(&req); err != nil {
+			fmt.Printf("error from jsonbind %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
 			return
 		}
 
 		if validationErr := validate.Struct(req); validationErr != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
+			fmt.Println("Validation Error:", validationErr.Error())
+			c.JSON(http.StatusUnprocessableEntity, gin.H{
+				"updateProfile": validationErr.Error(),
+			},
+			)
 			return
 		}
 
@@ -728,19 +728,19 @@ func UpdateProfile() gin.HandlerFunc {
 			var mutation struct {
 				UpdateProfile struct {
 					ID graphql.Int `graphql:"id"`
-				} `graphql:"update_users_by_pk(pk_columns: {id: userId}, _set: {username: $userName, phone: $Phone})"`
+				} `graphql:"update_users_by_pk(pk_columns: {id: $userId}, _set: {username: $userName, phone: $Phone})"`
 			}
 
 			mutationVars := map[string]interface{}{
-				"userId":   graphql.Int(req.Input.UserId),
-				"userName": graphql.String(req.Input.UserName),
-				"Phone":    graphql.String(req.Input.Phone),
+				"userId":   graphql.Int(req.UserId),
+				"userName": graphql.String(req.UserName),
+				"Phone":    graphql.String(req.Phone),
 			}
 
 			err := client.Mutate(context.Background(), &mutation, mutationVars)
 			if err != nil {
 				log.Println("Failed to update user profile:", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user profile"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user profile", "details": err.Error()})
 				return
 			}
 
@@ -756,9 +756,9 @@ func UpdateProfile() gin.HandlerFunc {
 			}
 
 			mutationVars := map[string]interface{}{
-				"userId":   graphql.Int(req.Input.UserId),
-				"userName": graphql.String(req.Input.UserName),
-				"Phone":    graphql.String(req.Input.Phone),
+				"userId":   graphql.Int(req.UserId),
+				"userName": graphql.String(req.UserName),
+				"Phone":    graphql.String(req.Phone),
 				"Profile":  graphql.String(proPicUrl),
 			}
 

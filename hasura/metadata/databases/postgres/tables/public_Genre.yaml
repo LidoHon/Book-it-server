@@ -1,0 +1,11 @@
+table:
+  name: Genre
+  schema: public
+array_relationships:
+  - name: bookGenres
+    using:
+      foreign_key_constraint_on:
+        column: genre_id
+        table:
+          name: bookGenre
+          schema: public

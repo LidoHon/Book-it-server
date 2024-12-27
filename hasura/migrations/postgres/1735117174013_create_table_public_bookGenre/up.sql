@@ -1,0 +1,1 @@
+CREATE TABLE "public"."bookGenre" ("id" serial NOT NULL, "book_id" integer NOT NULL, "genre_id" integer NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id") , FOREIGN KEY ("book_id") REFERENCES "public"."books"("id") ON UPDATE restrict ON DELETE cascade, FOREIGN KEY ("genre_id") REFERENCES "public"."Genre"("id") ON UPDATE restrict ON DELETE cascade);

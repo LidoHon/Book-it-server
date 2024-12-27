@@ -1,0 +1,10 @@
+table:
+  name: bookGenre
+  schema: public
+object_relationships:
+  - name: Genre
+    using:
+      foreign_key_constraint_on: genre_id
+  - name: book
+    using:
+      foreign_key_constraint_on: book_id

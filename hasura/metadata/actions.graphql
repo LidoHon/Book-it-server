@@ -1,4 +1,14 @@
 type Mutation {
+  addBook(
+    title: String!
+    author: String!
+    available: Boolean!
+    genre: String!
+    image: String
+  ): CreatedBooksOutput
+}
+
+type Mutation {
   editUploadedImages(
     movie_id: Int!
     images: [ImageInfo!]!
@@ -109,5 +119,29 @@ type ResetedPasswordOutput {
 
 type UpdateResponce {
   message: String!
+}
+
+type Book {
+  id: Int!
+  title: String!
+  author: String!
+  available: Boolean!
+  genre: String!
+  bookImage: String
+}
+
+type CreatedBooksOutput {
+  id: Int!
+  title: String!
+  author: String!
+  available: Boolean!
+  genre: String!
+  bookImage: String
+}
+
+type WishListOutput {
+  id: Int!
+  user: User!
+  book: Book!
 }
 

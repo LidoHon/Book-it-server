@@ -1,20 +1,30 @@
 table:
-  name: wishlist
+  name: rentedBooks
   schema: public
 configuration:
   column_config:
     bookId:
       custom_name: bookId
+    rent_day:
+      custom_name: rent_day
     userId:
       custom_name: userId
   custom_column_names:
     bookId: bookId
+    rent_day: rent_day
     userId: userId
   custom_root_fields: {}
 object_relationships:
   - name: book
     using:
       foreign_key_constraint_on: bookId
-  - name: user
+array_relationships:
+  - name: user_rent
     using:
-      foreign_key_constraint_on: userId
+      manual_configuration:
+        column_mapping:
+          userId: id
+        insertion_order: null
+        remote_table:
+          name: users
+          schema: public

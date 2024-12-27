@@ -1,18 +1,23 @@
 table:
   name: books
   schema: public
-array_relationships:
-  - name: RentedBooks
+configuration:
+  column_config:
+    available:
+      custom_name: available
+    bookImage:
+      custom_name: bookImage
+  custom_column_names:
+    available: available
+    bookImage: bookImage
+  custom_root_fields: {}
+object_relationships:
+  - name: rent_book
     using:
-      foreign_key_constraint_on:
-        column: book_id
-        table:
-          name: RentedBooks
-          schema: public
-  - name: wishlists
-    using:
-      foreign_key_constraint_on:
-        column: book_id
-        table:
-          name: wishlist
+      manual_configuration:
+        column_mapping:
+          id: bookId
+        insertion_order: null
+        remote_table:
+          name: rentedBooks
           schema: public

@@ -16,16 +16,9 @@ array_relationships:
   - name: RentedBooks
     using:
       foreign_key_constraint_on:
-        column: user_id
+        column: userId
         table:
-          name: RentedBooks
-          schema: public
-  - name: email_verification_tokens
-    using:
-      foreign_key_constraint_on:
-        column: user_id
-        table:
-          name: email_verification_tokens
+          name: rentedBooks
           schema: public
   - name: notifications
     using:
@@ -37,7 +30,7 @@ array_relationships:
   - name: wishlists
     using:
       foreign_key_constraint_on:
-        column: user_id
+        column: userId
         table:
           name: wishlist
           schema: public

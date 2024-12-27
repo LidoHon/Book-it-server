@@ -22,12 +22,17 @@ type GetBooksRequest struct {
 	Genre     string             `json:"genre"`
 }
 
-
 type UpdateBookRequest struct {
-	BookId json.Number `json:"book_id"`
-	Title  string       `json:"title" validate:"required"`
-	Author string       `json:"author"`
-	Genre  string       `json:"genre"`
+	BookId    json.Number        `json:"book_id"`
+	Title     string             `json:"title" validate:"required"`
+	Author    string             `json:"author"`
+	Genre     string             `json:"genre"`
 	BookImage *models.ImageInput `json:"image"`
-	Available bool `json:"available"`
+	Available bool               `json:"available"`
+}
+
+type UploadEndpointRequest struct {
+	Input struct {
+		BookId int `json:"book_id" validate:"required"`
+	} `json:"input"`
 }

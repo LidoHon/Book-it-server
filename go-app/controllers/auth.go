@@ -38,7 +38,7 @@ func RegisterUser() gin.HandlerFunc {
 
 		// Validate the input data
 		if err := validate.Struct(request); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed", "details": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Validation failed", "details": err.Error()})
 			return
 		}
 
@@ -59,13 +59,13 @@ func RegisterUser() gin.HandlerFunc {
 
 		if err := client.Query(context.Background(), &query, variable); err != nil {
 			log.Println("Error querying existing user:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query the existing user"})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to query the existing user"})
 			return
 		}
 
 		if len(query.User) != 0 {
 			log.Println("User already exists")
-			c.JSON(http.StatusBadRequest, gin.H{"error": "User already exists"})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "User already exists"})
 			return
 
 		}
@@ -102,7 +102,7 @@ func RegisterUser() gin.HandlerFunc {
 		err := client.Mutate(context.Background(), &mutation, mutationVariables)
 		if err != nil {
 			log.Println("Failed to register user:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to register user"})
 			return
 		}
 		// query newly created user
@@ -123,11 +123,11 @@ func RegisterUser() gin.HandlerFunc {
 		err = client.Query(context.Background(), &regesteredUserQuery, regesteredUserVariable)
 		if err != nil {
 			log.Println("Error querying the registered user:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query the registered user"})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to query the registered user"})
 			return
 		}
 		if len(regesteredUserQuery.User) == 0 {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "user not found after registration maybe he flead to another table:)"})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "user not found after registration maybe he flead to another table:)"})
 		}
 		user := regesteredUserQuery.User[0]
 		// generate email verification token
@@ -135,7 +135,7 @@ func RegisterUser() gin.HandlerFunc {
 
 		if err != nil {
 			log.Println("Error generating email verification token:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate email verification token", "detail": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to generate email verification token", "detail": err.Error()})
 			return
 		}
 
@@ -156,7 +156,7 @@ func RegisterUser() gin.HandlerFunc {
 		err = client.Mutate(context.Background(), &VerficationEmailMutation, verficatonEmailVariable)
 		if err != nil {
 			log.Printf("Error inserting email verification token: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register verfication token"})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to register verfication token"})
 			return
 		}
 
@@ -176,7 +176,7 @@ func RegisterUser() gin.HandlerFunc {
 
 		if err != nil {
 			log.Printf("error updating user with tokenId: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user tokenid", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to update user tokenid", "details": err.Error()})
 			return
 		}
 		log.Printf("User %d successfully updated with tokenId %d", user.ID, UpdateUserTokenMutation.UpdatedUser.TokenID)
@@ -204,34 +204,16 @@ func RegisterUser() gin.HandlerFunc {
 			emailForm,
 		)
 		if !res {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email verification email", "details": errString})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to send email verification email", "details": errString})
 			return
 		}
 
 		token, refreshToken, err := helpers.GenerateAllTokens(string(user.Email), string(user.Name), string(user.Role), string(user.TokenId))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to  generate jwt token", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to  generate jwt token", "details": err.Error()})
 			return
 
 		}
-		// response := models.SignupResponse{
-		// 	Data: struct {
-		// 		Signup models.SignedUpUserOutput `json:"signup"`
-		// 	}{
-		// 		Signup: models.SignedUpUserOutput{
-		// 			ID:           graphql.Int(user.ID),
-		// 			UserName:     user.Name,
-		// 			Email:        user.Email,
-		// 			Token:        graphql.String(token),
-		// 			Role:         user.Role,
-		// 			RefreshToken: graphql.String(refreshToken),
-		// 		},
-		// 	},
-		// 	}
-		// 	fmt.Println(response)
-
-		// 	c.JSON(http.StatusOK, response)
-		// }
 
 		response := models.SignedUpUserOutput{
 			ID:           user.ID,
@@ -254,13 +236,13 @@ func VerifyEmail() gin.HandlerFunc {
 		var request requests.EmailVerifyRequest
 
 		if err := c.ShouldBindJSON(&request); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
 			return
 		}
 		// Validate the request body
 		validationError := validate.Struct(request)
 		if validationError != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": validationError.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": validationError.Error()})
 			return
 
 		}
@@ -279,24 +261,24 @@ func VerifyEmail() gin.HandlerFunc {
 		}
 		err := client.Query(context.Background(), &query, variables)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to query the verification token", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to query the verification token", "details": err.Error()})
 			return
 		}
 		// Check if token is found
 		if len(query.Tokens) == 0 {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid verification token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid verification token"})
 			return
 		}
 
 		//  validate if the token is expired
 		expirationTime, err := time.Parse(time.RFC3339, string(query.Tokens[0].ExpiresAt))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse token expiration date", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to parse token expiration date", "details": err.Error()})
 			return
 		}
 
 		if time.Now().After(expirationTime) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "expired verification token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "expired verification token"})
 			return
 		}
 
@@ -318,7 +300,7 @@ func VerifyEmail() gin.HandlerFunc {
 		err = client.Mutate(context.Background(), &mutation, mutationVariables)
 		if err != nil {
 			log.Printf("Error updating user email verification status: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user email verification status", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to update user email verification status", "details": err.Error()})
 			return
 		}
 
@@ -334,7 +316,7 @@ func VerifyEmail() gin.HandlerFunc {
 		err = client.Mutate(context.Background(), &deleteMutation, deleteVariables)
 		if err != nil {
 			log.Printf("Error deleting email verification token: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete email verification token", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to delete email verification token", "details": err.Error()})
 			return
 		}
 
@@ -435,7 +417,7 @@ func ResetPassword() gin.HandlerFunc {
 
 		if err := c.ShouldBindJSON(&request); err != nil {
 			log.Printf("invalid input:%v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
 			return
 		}
 		// fetch user by email
@@ -456,12 +438,12 @@ func ResetPassword() gin.HandlerFunc {
 
 		if err := client.Query(context.Background(), &query, queryVars); err != nil {
 			log.Printf("failed to query a user data: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to query user data", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to query user data", "details": err.Error()})
 			return
 		}
 
 		if len(query.User) == 0 {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid credentials"})
 			return
 		}
 
@@ -474,7 +456,7 @@ func ResetPassword() gin.HandlerFunc {
 		token, err := helpers.GenerateToken()
 		if err != nil {
 			log.Printf("Failed to generate token: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to generate token", "details": err.Error()})
 			return
 		}
 		// Insert reset token into the database
@@ -492,7 +474,7 @@ func ResetPassword() gin.HandlerFunc {
 
 		if err := client.Mutate(context.Background(), &mutation, mutationVars); err != nil {
 			log.Printf("failed to register reset token")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register rewste token", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to register rewste token", "details": err.Error()})
 			return
 		}
 
@@ -513,7 +495,7 @@ func ResetPassword() gin.HandlerFunc {
 
 		if err != nil {
 			log.Printf("error updating user with tokenId: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user tokenid", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to update user tokenid", "details": err.Error()})
 			return
 		}
 		log.Printf("User %d successfully updated with tokenId %d", user.ID, UpdateUserTokenMutation.UpdatedUser.TokenID)
@@ -540,7 +522,7 @@ func ResetPassword() gin.HandlerFunc {
 			emailData,
 		); !success {
 			log.Printf("Failed to send password reset email: %v", errString)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send password reset email", "details": errString})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to send password reset email", "details": errString})
 			return
 		}
 
@@ -584,7 +566,7 @@ func UpdatePassword() gin.HandlerFunc {
 
 		if err := client.Query(context.Background(), &query, queryVars); err != nil {
 			log.Printf("failed to query token: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to query token", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to query token", "details": err.Error()})
 			return
 		}
 
@@ -661,7 +643,7 @@ func DeleteUser() gin.HandlerFunc {
 		var eventPayload requests.EventPayload
 
 		if err := c.ShouldBindJSON(&eventPayload); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "details": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input", "details": err.Error()})
 			return
 		}
 
@@ -681,7 +663,7 @@ func DeleteUser() gin.HandlerFunc {
 			)
 
 			if !success {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send account deletion email", "details": errorString})
+				c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to send account deletion email", "details": errorString})
 				return
 			}
 
@@ -689,7 +671,7 @@ func DeleteUser() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Something went wrong", "details": "Invalid input"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Something went wrong", "details": "Invalid input"})
 	}
 }
 
@@ -701,7 +683,7 @@ func UpdateProfile() gin.HandlerFunc {
 
 		if err := c.ShouldBindJSON(&req); err != nil {
 			fmt.Printf("error from jsonbind %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
 			return
 		}
 
@@ -740,7 +722,7 @@ func UpdateProfile() gin.HandlerFunc {
 			err := client.Mutate(context.Background(), &mutation, mutationVars)
 			if err != nil {
 				log.Println("Failed to update user profile:", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user profile", "details": err.Error()})
+				c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to update user profile", "details": err.Error()})
 				return
 			}
 
@@ -765,7 +747,7 @@ func UpdateProfile() gin.HandlerFunc {
 			err := client.Mutate(context.Background(), &mutation, mutationVars)
 			if err != nil {
 				log.Println("Failed to update user profile:", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user profile"})
+				c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to update user profile"})
 				return
 			}
 			res := models.UpdateResponce{
@@ -786,7 +768,7 @@ func DeleteUserByEmail() gin.HandlerFunc {
 
 		var input requests.DeleteUserWithEmailInput
 		if err := c.ShouldBindBodyWithJSON(&input); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "details": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid input", "details": err.Error()})
 			return
 		}
 
@@ -803,7 +785,7 @@ func DeleteUserByEmail() gin.HandlerFunc {
 		}
 
 		if err := client.Query(context.Background(), &query, queryVars); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query user data", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to query user data", "details": err.Error()})
 			return
 		}
 
@@ -818,7 +800,7 @@ func DeleteUserByEmail() gin.HandlerFunc {
 		}
 
 		if err := client.Mutate(context.Background(), &mutation, mutationVars); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user", "details": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to delete user", "details": err.Error()})
 			return
 		}
 		emailData := helpers.EmailData{
@@ -845,11 +827,11 @@ func DeleteUserByEmail() gin.HandlerFunc {
 				"userName": graphql.String(query.User.UserName),
 			}
 			if undoErr := client.Mutate(context.Background(), &undoMutation, undoVars); undoErr != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to rollback deletion", "details": undoErr.Error()})
+				c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to rollback deletion", "details": undoErr.Error()})
 				return
 			}
 
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email, deletion rolled back", "details": errorString})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to send email, deletion rolled back", "details": errorString})
 			return
 		}
 

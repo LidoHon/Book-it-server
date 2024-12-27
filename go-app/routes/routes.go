@@ -7,4 +7,6 @@ import (
 func RegisterRoutes(router *gin.Engine) {
 	AuthRoutes(router)
 	BooksRoutes(router)
+	WishlistRoutes(router)
+	RentRoutes(router)
 }

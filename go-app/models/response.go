@@ -72,12 +72,23 @@ type ErrorResponse struct {
 	Details string `json:"details,omitempty"`
 }
 
-
-type CreatedBooksOutput struct{
-	ID graphql.Int `graphql:"id"`
-	Title graphql.String `graphql:"title"`
-	Author graphql.String `graphql:"author"`
+type CreatedBooksOutput struct {
+	ID        graphql.Int     `graphql:"id"`
+	Title     graphql.String  `graphql:"title"`
+	Author    graphql.String  `graphql:"author"`
 	Available graphql.Boolean `graphql:"available"`
-	BookImage graphql.String `graphql:"bookImage"`
-	Genre graphql.String `graphql:"genre"`
+	BookImage graphql.String  `graphql:"bookImage"`
+	Genre     graphql.String  `graphql:"genre"`
+}
+type UpdatedBookOutput struct {
+	ID        graphql.Int     `graphql:"id"`
+	Title     graphql.String  `graphql:"title"`
+	Author    graphql.String  `graphql:"author"`
+	Available graphql.Boolean `graphql:"available"`
+	BookImage graphql.String  `graphql:"bookImage"`
+	Genre     graphql.String  `graphql:"genre"`
+}
+
+type UploadResponce struct {
+	Url graphql.String `json:"url"`
 }

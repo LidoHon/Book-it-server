@@ -23,7 +23,7 @@ array_relationships:
   - name: notifications
     using:
       foreign_key_constraint_on:
-        column: user_id
+        column: userId
         table:
           name: notification
           schema: public

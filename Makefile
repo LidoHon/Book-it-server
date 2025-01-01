@@ -33,9 +33,10 @@ confirm:
 # ============================================================================== #
 
 ## run/api: run the cmd/api application
-.PHONY: run/api
-run/api:
-	@go run .
+.PHONY: run-go-app
+run-go-app:
+	@go run ./go-app
+
 
 ## db/psql: connect to the database using psql
 .PHONY: db/psql

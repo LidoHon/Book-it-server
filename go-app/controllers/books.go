@@ -18,7 +18,7 @@ func InsertBooks() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		client := libs.SetupGraphqlClient()
 
-		_, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
 		req := requests.InsertBooksRequest{}
@@ -65,7 +65,7 @@ func InsertBooks() gin.HandlerFunc {
 			"genre":     graphql.String(req.Genre),
 		}
 
-		err := client.Mutate(context.Background(), &mutation, mutationVars)
+		err := client.Mutate(ctx, &mutation, mutationVars)
 		if err != nil {
 			log.Println("failed to insert a book", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to insert a book", "details": err.Error()})

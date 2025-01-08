@@ -23,7 +23,7 @@ var validate = validator.New()
 func RegisterUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		client := libs.SetupGraphqlClient()
-		_, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
 		// Declare a variable to hold the input data from the json req body
@@ -57,9 +57,9 @@ func RegisterUser() gin.HandlerFunc {
 			"email": graphql.String(request.Input.Email),
 		}
 
-		if err := client.Query(context.Background(), &query, variable); err != nil {
+		if err := client.Query(ctx, &query, variable); err != nil {
 			log.Println("Error querying existing user:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to query the existing user"})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to query the existing user", "details": err.Error()})
 			return
 		}
 
@@ -181,15 +181,8 @@ func RegisterUser() gin.HandlerFunc {
 		}
 		log.Printf("User %d successfully updated with tokenId %d", user.ID, UpdateUserTokenMutation.UpdatedUser.TokenID)
 
-		// verficationLink := os.Getenv("CHAPA_RETURN_URL") + "?verification token" + emailVerficationToken + "&user_id=" + strconv.Itoa(int(user.ID))
-		verificationLink := os.Getenv("CHAPA_RETURN_URL") + "?verification_token=" + emailVerficationToken + "&id=" + strconv.Itoa(int(user.ID))
+		verificationLink := os.Getenv("CHAPA_RETURN_URL") + "?verification_token=" + emailVerficationToken + "&user_id=" + strconv.Itoa(int(user.ID))
 
-		// verficationLink := fmt.Sprintf("%s?verification_token=%s&user_id=%d",
-		// 	os.Getenv("CHAPA_RETURN_URL"),
-		// 	url.QueryEscape(emailVerficationToken),
-		// 	user.ID,
-		// 	)
-		// verficationLink := fmt.Sprintf("http://localhost:5000/api/users/verify-email?verification_token=%s&user_id=%d", emailVerficationToken, user.ID)
 
 		emailForm := helpers.EmailData{
 			Name:    string(user.Name),
@@ -204,7 +197,7 @@ func RegisterUser() gin.HandlerFunc {
 			emailForm,
 		)
 		if !res {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to send email verification email", "details": errString})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to send email verification email, please contact support.", "details": errString})
 			return
 		}
 

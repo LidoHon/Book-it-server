@@ -15,8 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
-
 func handleImageUpload(image models.ImageInput) (string, string) {
 	// Decode base64 string to []byte
 	imageData, err := base64.StdEncoding.DecodeString(image.Base64String)
@@ -51,7 +49,7 @@ func ImageUpload() gin.HandlerFunc {
 		// Read the body data
 		bodyBytes, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			fmt.Println("body parsing error:",err.Error())
+			fmt.Println("body parsing error:", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			c.Abort()
 			return
@@ -69,7 +67,7 @@ func ImageUpload() gin.HandlerFunc {
 		}
 
 		if err := json.Unmarshal(bodyBytes, &requestBody); err != nil {
-			fmt.Println("error in unmarshal the body:",err.Error())
+			fmt.Println("error in unmarshal the body:", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image data"})
 			c.Abort()
 			return
@@ -78,7 +76,7 @@ func ImageUpload() gin.HandlerFunc {
 		if requestBody.Input.Image != nil {
 			imageUrl, err := handleImageUpload(*requestBody.Input.Image)
 			if err != "" {
-				fmt.Println("error in handling image upload:",err)
+				fmt.Println("error in handling image upload:", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload image", "detail": err})
 				c.Abort()
 				return
@@ -89,7 +87,7 @@ func ImageUpload() gin.HandlerFunc {
 			for _, image := range requestBody.Input.Images {
 				imageUrl, err := handleImageUpload(image)
 				if err != "" {
-					fmt.Println("error again in multiple image upload:",err)
+					fmt.Println("error again in multiple image upload:", err)
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload images", "detail": err})
 					c.Abort()
 					return

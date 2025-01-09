@@ -34,9 +34,9 @@ func CreateWishlist() gin.HandlerFunc {
 
 		var mutation struct {
 			InsertWishlist struct {
-				ID        int    `json:"id"`
-				UserId    int    `json:"userId"`
-				BookId    int    `json:"bookId"`
+				ID     int `json:"id"`
+				UserId int `json:"userId"`
+				BookId int `json:"bookId"`
 			} `graphql:"insert_wishlist_one(object: {userId: $user_id, bookId: $book_id})"`
 		}
 
@@ -96,12 +96,12 @@ func DeleteWishList() gin.HandlerFunc {
 			return
 		}
 
-		query := struct{
-			Wishlist struct{
-				ID graphql.Int `graphql:"id"`
+		query := struct {
+			Wishlist struct {
+				ID     graphql.Int `graphql:"id"`
 				BookId graphql.Int `graphql:"bookId"`
 				UserId graphql.Int `graphql:"userId"`
-			}`graphql:" wishlist_by_pk(id: $id)"`
+			} `graphql:" wishlist_by_pk(id: $id)"`
 		}{}
 
 		queryVars := map[string]interface{}{
@@ -121,10 +121,10 @@ func DeleteWishList() gin.HandlerFunc {
 			return
 		}
 
-		mutation := struct{
-			DeleteWishList struct{
+		mutation := struct {
+			DeleteWishList struct {
 				ID int `json:"id"`
-			}`graphql:"delete_wishlist_by_pk(id: $id)"`
+			} `graphql:"delete_wishlist_by_pk(id: $id)"`
 		}{}
 
 		mutationVars := map[string]interface{}{

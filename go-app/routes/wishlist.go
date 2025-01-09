@@ -13,4 +13,3 @@ func WishlistRoutes(incomingRoutes *gin.Engine) {
 	}
 
 }
-

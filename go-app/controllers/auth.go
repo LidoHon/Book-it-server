@@ -183,7 +183,6 @@ func RegisterUser() gin.HandlerFunc {
 
 		verificationLink := os.Getenv("CHAPA_RETURN_URL") + "?verification_token=" + emailVerficationToken + "&user_id=" + strconv.Itoa(int(user.ID))
 
-
 		emailForm := helpers.EmailData{
 			Name:    string(user.Name),
 			Email:   string(user.Email),
@@ -493,13 +492,13 @@ func ResetPassword() gin.HandlerFunc {
 		}
 		log.Printf("User %d successfully updated with tokenId %d", user.ID, UpdateUserTokenMutation.UpdatedUser.TokenID)
 
-		// verificationLink := os.Getenv("CHAPA_RETURN_URL") + "users/password-reset?token=" + token + "&id=" + strconv.Itoa(int(user.ID))
-		verificationLink := fmt.Sprintf(
-			"%susers/password-reset?token=%s&id=%d",
-			os.Getenv("CHAPA_RETURN_URL"),
-			token,
-			int(user.ID),
-		)
+		verificationLink := os.Getenv("RESET_PASS_URL") + "/password-reset?token=" + token + "&id=" + strconv.Itoa(int(user.ID))
+		// verificationLink := fmt.Sprintf(
+		// 	"%s/password-reset?token=%s&id=%d",
+		// 	os.Getenv("RESET_PASS_URL"), // Base URL
+		// 	token,                         // Reset token
+		// 	int(user.ID),                   // User ID
+		// )
 
 		// Send password reset email
 		emailData := helpers.EmailData{
@@ -708,9 +707,9 @@ func UpdateProfile() gin.HandlerFunc {
 			}
 
 			mutationVars := map[string]interface{}{
-				"userId":   graphql.Int(req.UserId),
-				"userName": graphql.String(req.UserName),
-				"Phone":    graphql.String(req.Phone),
+				"userId":   graphql.Int(req.Input.UserId),
+				"userName": graphql.String(req.Input.UserName),
+				"Phone":    graphql.String(req.Input.Phone),
 			}
 
 			err := client.Mutate(context.Background(), &mutation, mutationVars)
@@ -732,9 +731,9 @@ func UpdateProfile() gin.HandlerFunc {
 			}
 
 			mutationVars := map[string]interface{}{
-				"userId":   graphql.Int(req.UserId),
-				"userName": graphql.String(req.UserName),
-				"Phone":    graphql.String(req.Phone),
+				"userId":   graphql.Int(req.Input.UserId),
+				"userName": graphql.String(req.Input.UserName),
+				"Phone":    graphql.String(req.Input.Phone),
 				"Profile":  graphql.String(proPicUrl),
 			}
 

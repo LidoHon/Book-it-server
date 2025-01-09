@@ -39,7 +39,7 @@ func PlaceRent() gin.HandlerFunc {
 			return
 		}
 
-		mu.Lock() 
+		mu.Lock()
 		defer mu.Unlock()
 
 		// Check if the book is already rented (pseudo-code for locking logic)
@@ -65,18 +65,15 @@ func PlaceRent() gin.HandlerFunc {
 			return
 		}
 
-
-
 		var mutation struct {
 			RentBook struct {
-				UserId  int       `json:"userId"`
-				BookId  int       `json:"bookId"`
+				UserId int `json:"userId"`
+				BookId int `json:"bookId"`
 			} `graphql:"insert_rentedBooks_one(object: {bookId: $bookId, userId: $userId}) "`
 		}
 		mutationVars := map[string]interface{}{
-			"bookId":  graphql.Int(req.BookId),
-			"userId":  graphql.Int(req.UserId),
-			 
+			"bookId": graphql.Int(req.BookId),
+			"userId": graphql.Int(req.UserId),
 		}
 
 		err = client.Mutate(ctx, &mutation, mutationVars)
@@ -86,12 +83,11 @@ func PlaceRent() gin.HandlerFunc {
 			return
 		}
 
-		mutationBooks := struct{
+		mutationBooks := struct {
 			UpdateBookByPk struct {
 				Available bool `json:"available"`
-			}`graphql:"update_books_by_pk(pk_columns: {id: $id}, _set: {available: false})"`
+			} `graphql:"update_books_by_pk(pk_columns: {id: $id}, _set: {available: false})"`
 		}{}
-		
 
 		mutaionBooksVars := map[string]interface{}{
 			"id": graphql.Int(req.BookId),
@@ -105,19 +101,16 @@ func PlaceRent() gin.HandlerFunc {
 		}
 
 		res := models.CreatedRentBook{
-			UserId:  graphql.Int(mutation.RentBook.UserId),
-			BookId:  graphql.Int(mutation.RentBook.BookId),
-			
+			UserId: graphql.Int(mutation.RentBook.UserId),
+			BookId: graphql.Int(mutation.RentBook.BookId),
 		}
 
 		c.JSON(http.StatusOK, res)
 	}
 }
 
-
-
-func DeleteRent () gin.HandlerFunc{
-	return func(c *gin.Context){
+func DeleteRent() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		client := libs.SetupGraphqlClient()
 
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
@@ -131,14 +124,14 @@ func DeleteRent () gin.HandlerFunc{
 			return
 		}
 
-		query := struct{
-			Rent struct{
-				ID graphql.Int `graphql:"id"`
+		query := struct {
+			Rent struct {
+				ID     graphql.Int `graphql:"id"`
 				BookId graphql.Int `graphql:"bookId"`
 				UserId graphql.Int `graphql:"userId"`
-			}`graphql:" rentedBooks_by_pk(id: $id)"`
+			} `graphql:" rentedBooks_by_pk(id: $id)"`
 		}{}
-		
+
 		queryVars := map[string]interface{}{
 			"id": graphql.Int(rentId),
 		}
@@ -150,16 +143,16 @@ func DeleteRent () gin.HandlerFunc{
 			return
 		}
 
-		if query.Rent.ID == 0{
+		if query.Rent.ID == 0 {
 			log.Println("rent not found")
 			c.JSON(http.StatusNotFound, gin.H{"message": "rent not found"})
 			return
 		}
 
 		mutation := struct {
-			DeleteRent struct{
+			DeleteRent struct {
 				ID graphql.Int `json:"id"`
-			}`graphql:" delete_rentedBooks_by_pk(id: $id)"`
+			} `graphql:" delete_rentedBooks_by_pk(id: $id)"`
 		}{}
 
 		mutateVars := map[string]interface{}{
@@ -172,7 +165,7 @@ func DeleteRent () gin.HandlerFunc{
 			return
 		}
 
-		if mutation.DeleteRent.ID == 0{
+		if mutation.DeleteRent.ID == 0 {
 			log.Println("rent not found")
 			c.JSON(http.StatusNotFound, gin.H{"message": "rent not found"})
 			return
@@ -180,9 +173,8 @@ func DeleteRent () gin.HandlerFunc{
 
 		c.JSON(http.StatusOK, gin.H{"message": "rent deleted sucessfully"})
 	}
-	
-}
 
+}
 
 func ReturnBook() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -192,24 +184,23 @@ func ReturnBook() gin.HandlerFunc {
 		defer cancel()
 
 		var req struct {
-            RentId  int `json:"rentId"`
-            BookId  int `json:"bookId"`
-        }
+			RentId int `json:"rentId"`
+			BookId int `json:"bookId"`
+		}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
 		}
 		// returnDate := time.Now().Format(time.RFC3339)
 		// mutation := struct {
-        //     UpdateRentedBook struct {
-        //         Id int `json:"id"`
-        //     } `graphql:"update_rentedBooks_by_pk(pk_columns: {id: $rentId}, _set: {return_date: $returnDate})"` 
-        // }{}
-        // mutateVars := map[string]interface{}{
-        //     "rentId": graphql.Int(req.RentId),
+		//     UpdateRentedBook struct {
+		//         Id int `json:"id"`
+		//     } `graphql:"update_rentedBooks_by_pk(pk_columns: {id: $rentId}, _set: {return_date: $returnDate})"`
+		// }{}
+		// mutateVars := map[string]interface{}{
+		//     "rentId": graphql.Int(req.RentId),
 		// 	"returnDate": returnDate,
-            
-        // }
 
+		// }
 
 		// if err := client.Mutate(ctx, &mutation, mutateVars); err !=nil{
 		// 	log.Println("failed to return a book", err)
@@ -217,10 +208,10 @@ func ReturnBook() gin.HandlerFunc {
 		// 	return
 		// }
 
-		mutate := struct{
-            UpdateBook struct {
-                Id int `json:"id"`
-            } `graphql:"update_books_by_pk(pk_columns: {id: $bookId}, _set: {available: true})"` 
+		mutate := struct {
+			UpdateBook struct {
+				Id int `json:"id"`
+			} `graphql:"update_books_by_pk(pk_columns: {id: $bookId}, _set: {available: true})"`
 		}{}
 		mutationVars := map[string]interface{}{
 			"bookId": graphql.Int(req.BookId),
@@ -237,10 +228,10 @@ func ReturnBook() gin.HandlerFunc {
 		var wishlistQuery struct {
 			UsersWithBookWishlist []struct {
 				UserId int `json:"userId"`
-			}`graphql:"users(where: {wishlist: {bookId: {_eq: $bookId}}})"`
-			Book struct{
+			} `graphql:"users(where: {wishlist: {bookId: {_eq: $bookId}}})"`
+			Book struct {
 				Title string `json:"title"`
-			}`graphql:"books_by_pk(id: $bookId)"`
+			} `graphql:"books_by_pk(id: $bookId)"`
 		}
 
 		wishlistVars := map[string]interface{}{
@@ -259,11 +250,10 @@ func ReturnBook() gin.HandlerFunc {
 			notificationMutation := struct {
 				InsertNotification struct {
 					Id int `json:"id"`
-					
-				}`graphql:" insert_notification_one(object: {id: 10, message: $message, userId: $userId})"`
+				} `graphql:" insert_notification_one(object: {id: 10, message: $message, userId: $userId})"`
 			}{}
 			notificationVars := map[string]interface{}{
-				"userId": graphql.Int(user.UserId),
+				"userId":  graphql.Int(user.UserId),
 				"message": fmt.Sprintf("Book '%s' is now available for rent", wishlistQuery.Book.Title),
 			}
 
@@ -271,17 +261,12 @@ func ReturnBook() gin.HandlerFunc {
 				log.Println("failed to send notification", err)
 				// c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to send notification", "details": err.Error()})
 				// return
-				 // Continue with other users even if one fails
+				// Continue with other users even if one fails
 				continue
+			}
+
+			c.JSON(http.StatusOK, gin.H{"message": "book rented and notification sent successfully"})
 		}
-
-		
-		
-		
-
-		c.JSON(http.StatusOK, gin.H{"message": "book rented and notification sent successfully"})
 	}
-}
-
 
 }

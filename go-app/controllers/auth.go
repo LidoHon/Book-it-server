@@ -540,8 +540,9 @@ func UpdatePassword() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
 			return
 		}
-
+		log.Printf("Incoming request: %+v", request)
 		if validationError := validate.Struct(request); validationError != nil {
+			log.Printf("Validation error: %v", validationError)
 			c.JSON(http.StatusBadRequest, gin.H{"message": "validation failed", "details": validationError.Error()})
 			return
 		}
@@ -554,7 +555,7 @@ func UpdatePassword() gin.HandlerFunc {
 			} `graphql:"email_verification_tokens(where: {token: {_eq: $token}})"`
 		}
 		queryVars := map[string]interface{}{
-			"token": graphql.String(request.Token),
+			"token": graphql.String(request.Input.Token),
 		}
 
 		if err := client.Query(context.Background(), &query, queryVars); err != nil {
@@ -568,7 +569,7 @@ func UpdatePassword() gin.HandlerFunc {
 			return
 		}
 
-		password := helpers.HashPassword(request.Password)
+		password := helpers.HashPassword(request.Input.Password)
 
 		var mutation struct {
 			UpdateUser struct {
@@ -581,7 +582,7 @@ func UpdatePassword() gin.HandlerFunc {
 		}
 
 		mutationVars := map[string]interface{}{
-			"id":       graphql.Int(request.UserId),
+			"id":       graphql.Int(request.Input.UserId),
 			"password": graphql.String(password),
 		}
 

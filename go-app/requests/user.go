@@ -37,9 +37,11 @@ type PasswordResetRequest struct {
 }
 
 type UpdatePasswordRequest struct {
+	Input struct {
 	Token    string `json:"token" validate:"required"`
-	UserId   int    `json:"user_id" validate:"required"`
+	UserId   int    `json:"userId" validate:"required"`
 	Password string `json:"password" validate:"required,min=6"`
+}`json:"input"`
 }
 
 type EventPayload struct {

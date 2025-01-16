@@ -73,20 +73,20 @@ type ErrorResponse struct {
 }
 
 type CreatedBooksOutput struct {
-	ID        graphql.Int     `graphql:"id"`
-	Title     graphql.String  `graphql:"title"`
-	Author    graphql.String  `graphql:"author"`
-	Available graphql.Boolean `graphql:"available"`
-	BookImage graphql.String  `graphql:"bookImage"`
-	Genre     graphql.String  `graphql:"genre"`
+	ID        graphql.Int     `json:"id"`
+	Title     graphql.String  `json:"title"`
+	Author    graphql.String  `json:"author"`
+	Available graphql.Boolean `json:"avaliable"`
+	BookImage graphql.String  `json:"bookImage"`
+	Genre     graphql.String  `json:"genre"`
 }
 type UpdatedBookOutput struct {
-	ID        graphql.Int     `graphql:"id"`
-	Title     graphql.String  `graphql:"title"`
-	Author    graphql.String  `graphql:"author"`
-	Available graphql.Boolean `graphql:"available"`
-	BookImage graphql.String  `graphql:"bookImage"`
-	Genre     graphql.String  `graphql:"genre"`
+	ID        graphql.Int     `json:"id"`
+	Title     graphql.String  `json:"title"`
+	Author    graphql.String  `json:"author"`
+	Available graphql.Boolean `json:"available"`
+	BookImage graphql.String  `json:"bookImage"`
+	Genre     graphql.String  `json:"genre"`
 }
 
 type UploadResponce struct {

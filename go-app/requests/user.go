@@ -99,7 +99,7 @@ type UpdateRequest struct {
 	Input struct {
 		UserName string             `json:"userName" validate:"required"`
 		Phone    string             `json:"phone" validate:"required"`
-		UserId   int                `json:"user_id" validate:"required"`
+		UserId   int                `json:"userId" validate:"required"`
 		Image    *models.ImageInput `json:"image"`
 	} `json:"input"`
 }

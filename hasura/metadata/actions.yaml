@@ -11,7 +11,7 @@ actions:
   - name: editUploadedImages
     definition:
       kind: synchronous
-      handler: http://172.17.0.1:4000/movie/update/images
+      handler: http://192.168.143.132:5000/movie/update/images
       forward_client_headers: true
       request_transform:
         method: POST
@@ -23,7 +23,7 @@ actions:
   - name: login
     definition:
       kind: ""
-      handler: http://192.168.0.40:5000/api/users/login
+      handler: '{{HASURA_ACTION_BASE_URL}}/api/users/login'
       forward_client_headers: true
       request_transform:
         method: POST
@@ -35,7 +35,7 @@ actions:
   - name: passwordResetRequest
     definition:
       kind: synchronous
-      handler: http://192.168.0.40:5000/api/users/reset-password
+      handler: '{{HASURA_ACTION_BASE_URL}}/api/users/reset-password'
       forward_client_headers: true
       request_transform:
         method: POST
@@ -47,7 +47,7 @@ actions:
   - name: passwordUpdate
     definition:
       kind: synchronous
-      handler: http://192.168.0.40:5000/api/users/update-password
+      handler: '{{HASURA_ACTION_BASE_URL}}/api/users/update-password'
       forward_client_headers: true
       request_transform:
         method: POST
@@ -59,7 +59,7 @@ actions:
   - name: signup
     definition:
       kind: synchronous
-      handler: http://192.168.0.40:5000/api/users/register
+      handler: '{{HASURA_ACTION_BASE_URL}}/api/users/register'
       forward_client_headers: true
       request_transform:
         method: POST
@@ -71,7 +71,7 @@ actions:
   - name: updateProfile
     definition:
       kind: synchronous
-      handler: http://192.168.0.40:5000/api/users/update-profile
+      handler: '{{HASURA_ACTION_BASE_URL}}/api/users/update-profile'
       forward_client_headers: true
       request_transform:
         method: POST
@@ -84,7 +84,7 @@ actions:
   - name: verifyEmail
     definition:
       kind: synchronous
-      handler: http://192.168.0.40:5000/api/users/verify-email
+      handler: '{{HASURA_ACTION_BASE_URL}}/api/users/verify-email'
       forward_client_headers: true
       request_transform:
         method: POST

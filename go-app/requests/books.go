@@ -7,11 +7,13 @@ import (
 )
 
 type InsertBooksRequest struct {
-	Title     string             `json:"title"`
-	Author    string             `json:"author"`
-	Available bool               `json:"available"`
-	BookImage *models.ImageInput `json:"image"`
-	Genre     string             `json:"genre"`
+	Input struct {
+		Title     string             `json:"title"`
+		Author    string             `json:"author"`
+		Available bool               `json:"available"`
+		BookImage *models.ImageInput `json:"image"`
+		Genre     string             `json:"genre"`
+	} `json:"input"`
 }
 
 type GetBooksRequest struct {

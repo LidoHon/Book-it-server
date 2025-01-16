@@ -4,7 +4,7 @@ type Mutation {
     author: String!
     available: Boolean!
     genre: String!
-    image: String
+    image: ImageInfo
   ): CreatedBooksOutput
 }
 
@@ -31,7 +31,7 @@ type Mutation {
 type Mutation {
   passwordUpdate(
     token: String!
-    user_id: Int!
+    userId: Int!
     password: String!
   ): ResetedPasswordOutput!
 }
@@ -50,7 +50,7 @@ type Mutation {
   updateProfile(
     userName: String!
     phone: String!
-    user_id: Int!
+    userId: Int!
     image: ImageInfo
   ): UpdateResponce!
 }
@@ -134,7 +134,7 @@ type CreatedBooksOutput {
   id: Int!
   title: String!
   author: String!
-  available: Boolean!
+  avaliable: Boolean!
   genre: String!
   bookImage: String
 }

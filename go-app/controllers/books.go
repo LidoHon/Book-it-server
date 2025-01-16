@@ -58,11 +58,11 @@ func InsertBooks() gin.HandlerFunc {
 		}
 
 		mutationVars := map[string]interface{}{
-			"title":     graphql.String(req.Title),
-			"author":    graphql.String(req.Author),
-			"available": graphql.Boolean(req.Available),
+			"title":     graphql.String(req.Input.Title),
+			"author":    graphql.String(req.Input.Author),
+			"available": graphql.Boolean(req.Input.Available),
 			"image":     graphql.String(BookImage),
-			"genre":     graphql.String(req.Genre),
+			"genre":     graphql.String(req.Input.Genre),
 		}
 
 		err := client.Mutate(ctx, &mutation, mutationVars)

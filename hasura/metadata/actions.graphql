@@ -47,6 +47,16 @@ type Mutation {
 }
 
 type Mutation {
+  updateBook(
+    title: String!
+    author: String!
+    genre: String!
+    book_id: Int!
+    bookImage: ImageInfo
+  ): UpdatedBookOutput!
+}
+
+type Mutation {
   updateProfile(
     userName: String!
     phone: String!
@@ -143,5 +153,9 @@ type WishListOutput {
   id: Int!
   user: User!
   book: Book!
+}
+
+type UpdatedBookOutput {
+  message: String!
 }
 

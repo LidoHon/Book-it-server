@@ -81,12 +81,7 @@ type CreatedBooksOutput struct {
 	Genre     graphql.String  `json:"genre"`
 }
 type UpdatedBookOutput struct {
-	ID        graphql.Int     `json:"id"`
-	Title     graphql.String  `json:"title"`
-	Author    graphql.String  `json:"author"`
-	Available graphql.Boolean `json:"available"`
-	BookImage graphql.String  `json:"bookImage"`
-	Genre     graphql.String  `json:"genre"`
+	Message graphql.String `json:"message"`
 }
 
 type UploadResponce struct {

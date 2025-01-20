@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -89,15 +90,6 @@ func UpdateBooks() gin.HandlerFunc {
 		client := libs.SetupGraphqlClient()
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
-
-		bookIdParam := c.Param("id")
-
-		bookId, err := strconv.ParseInt(bookIdParam, 10, 64)
-		if err != nil {
-			log.Println("failed to convert bookId to int64", err)
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid book ID", "details": err.Error()})
-			return
-		}
 		req := requests.UpdateBookRequest{}
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
@@ -118,11 +110,20 @@ func UpdateBooks() gin.HandlerFunc {
 				Available graphql.Boolean `graphql:"available"`
 				BookImage graphql.String  `graphql:"bookImage"`
 				Genre     graphql.String  `graphql:"genre"`
-			} `graphql:"books(where: {id: {_eq: $id}})"`
+			} `graphql:"books(where: {id: {_eq: $book_id}})"`
 		}
+		bookId, err := req.Input.BookId.Int64()
+		// fmt.Printf("book_id from the request: %d\n", req.BookId)
+
+		fmt.Printf("bookId from the update book controller: %v\n", bookId)
+		if err != nil {
+			log.Println("failed to convert bookId to int64", err)
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid book ID", "details": err.Error()})
+			return
+}
 
 		queryVars := map[string]interface{}{
-			"id": graphql.Int(bookId),
+			"book_id": graphql.Int(bookId),
 		}
 
 		err = client.Query(ctx, &query, queryVars)
@@ -152,21 +153,21 @@ func UpdateBooks() gin.HandlerFunc {
 
 		var mutation struct {
 			UpdateBooks struct {
-				ID        int             `json:"id"`
-				Title     graphql.String  `json:"title"`
-				Author    graphql.String  `json:"author"`
-				Available graphql.Boolean `json:"available"`
-				BookImage graphql.String  `json:"image"`
-				Genre     graphql.String  `json:"genre"`
+				ID        graphql.Int     `graphql:"id"`
+				Title     graphql.String  `graphql:"title"`
+				Author    graphql.String  `graphql:"author"`
+				Available graphql.Boolean `graphql:"available"`
+				BookImage graphql.String  `graphql:"bookImage"`
+				Genre     graphql.String  `graphql:"genre"`
 			} `graphql:"update_books_by_pk(pk_columns: {id: $id}, _set: {author: $author, available: $available, bookImage: $image, genre: $genre, title: $title})"`
 		}
 		mutationVars := map[string]interface{}{
-			"id":        graphql.Int(book.ID),
-			"title":     graphql.String(req.Title),
-			"author":    graphql.String(req.Author),
-			"available": graphql.Boolean(req.Available),
+			"id":        graphql.Int(bookId),
+			"title":     graphql.String(req.Input.Title),
+			"author":    graphql.String(req.Input.Author),
+			"available": graphql.Boolean(req.Input.Available),
 			"image":     graphql.String(BookImage),
-			"genre":     graphql.String(req.Genre),
+			"genre":     graphql.String(req.Input.Genre),
 		}
 		err = client.Mutate(ctx, &mutation, mutationVars)
 		if err != nil {
@@ -175,16 +176,9 @@ func UpdateBooks() gin.HandlerFunc {
 			return
 		}
 
-		res := models.UpdatedBookOutput{
-			ID:        graphql.Int(mutation.UpdateBooks.ID),
-			Title:     mutation.UpdateBooks.Title,
-			Author:    mutation.UpdateBooks.Author,
-			Available: mutation.UpdateBooks.Available,
-			BookImage: mutation.UpdateBooks.BookImage,
-			Genre:     mutation.UpdateBooks.Genre,
-		}
-
-		c.JSON(200, res)
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Book updated successfully",
+		})
 	}
 }
 

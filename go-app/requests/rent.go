@@ -5,9 +5,8 @@ import (
 )
 
 type PlaceRentRequest struct {
-	ID     graphql.Int `json:"id"`
-	UserId graphql.Int `json:"userId"`
-	BookId graphql.Int `json:"bookId"`
+	UserId int `json:"user_id"`
+	BookId int `json:"book_id"`
 }
 
 type UpdateRentRequest struct {

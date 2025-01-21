@@ -37,6 +37,13 @@ type Mutation {
 }
 
 type Mutation {
+  rentbook(
+    user_id: Int!
+    book_id: Int!
+  ): CreatedRentBook
+}
+
+type Mutation {
   signup(
     userName: String!
     email: String!
@@ -157,5 +164,12 @@ type WishListOutput {
 
 type UpdatedBookOutput {
   message: String!
+}
+
+type CreatedRentBook {
+  message: String!
+  user_id: Int!
+  book_id: Int!
+  rent_day: String!
 }
 

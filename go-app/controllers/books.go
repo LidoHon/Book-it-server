@@ -142,12 +142,11 @@ func UpdateBooks() gin.HandlerFunc {
 		book := query.Books[0]
 
 		imageUrl, exists := c.Get("imageUrl")
-		if !exists {
-			imageUrl = ""
-		}
-
-		BookImage, ok := imageUrl.(string)
-		if !ok {
+		fmt.Printf("Retrieved imageUrl in controller: %v, exists: %v\n", imageUrl, exists)
+		var BookImage string
+		if exists {
+			BookImage, _ = imageUrl.(string)
+		} else {
 			BookImage = string(book.BookImage)
 		}
 
@@ -359,3 +358,43 @@ func DeleteBooks() gin.HandlerFunc {
 		})
 	}
 }
+
+
+// func UpdateImage() gin.HandlerFunc{
+// 	return func(c *gin.Context){
+// 		client := libs.SetupGraphqlClient()
+// 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+// 		defer cancel()
+
+// 		var request requests.UploadEndpointRequest
+// 		if err := c.ShouldBindJSON(&request); err != nil {
+// 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
+// 			return
+// 		}
+
+// 		validationError := validate.Struct(request)
+// 		if validationError != nil {
+// 			c.JSON(http.StatusBadRequest, gin.H{"error": validationError.Error()})
+// 			return
+// 		}
+
+// 		imageUrls, exists := c.Get("imageUrls")
+// 		if !exists {
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": "image url not found"})
+// 			return
+// 		}
+
+// 		imageUrlsSlice, ok := imageUrls.([]string)
+// 		if !ok {
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to convert image url to string"})
+// 			return
+// 		}
+
+// 		var deleteMutation struct{
+// 			DeleteBookImages struct{
+
+// 			}
+// 		}
+
+// 	}
+// }

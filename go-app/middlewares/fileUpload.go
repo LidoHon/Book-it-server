@@ -74,15 +74,18 @@ func ImageUpload() gin.HandlerFunc {
 		}
 
 		if requestBody.Input.Image != nil {
+			fmt.Println("Single image upload detected")
 			imageUrl, err := handleImageUpload(*requestBody.Input.Image)
 			if err != "" {
-				fmt.Println("error in handling image upload:", err)
+				fmt.Println("error in handling single image upload:", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload image", "detail": err})
 				c.Abort()
 				return
 			}
+			fmt.Println("Setting imageUrl in context:", imageUrl)
 			c.Set("imageUrl", imageUrl)
 		} else if len(requestBody.Input.Images) > 0 {
+			fmt.Println("Multiple image uploads detected")
 			var imageUrls []string
 			for _, image := range requestBody.Input.Images {
 				imageUrl, err := handleImageUpload(image)
@@ -94,7 +97,11 @@ func ImageUpload() gin.HandlerFunc {
 				}
 				imageUrls = append(imageUrls, imageUrl)
 			}
+			fmt.Println("Setting imageUrls in context:", imageUrls)
+
 			c.Set("imageUrls", imageUrls)
+		}else{
+			fmt.Println("No image data found in request body")
 		}
 		c.Next()
 	}

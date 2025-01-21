@@ -73,7 +73,7 @@ actions:
       kind: synchronous
       handler: '{{HASURA_ACTION_BASE_URL}}/api/books/update-books'
       request_transform:
-        method: POST
+        method: PUT
         query_params: {}
         template_engine: Kriti
         version: 2

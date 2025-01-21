@@ -13,7 +13,7 @@ func BooksRoutes(incomingRoutes *gin.Engine) {
 		booksRoutes.GET("/get-books", controllers.GetBooks())
 		booksRoutes.GET("/get-books/:id", controllers.GetBooksById())
 		// booksRoutes.PUT("/update-books/:id", middlewares.ImageUpload(), controllers.UpdateBooks())
-		booksRoutes.POST("/update-books", middlewares.ImageUpload(), controllers.UpdateBooks())
+		booksRoutes.PUT("/update-books", middlewares.ImageUpload(), controllers.UpdateBooks())
 		booksRoutes.DELETE("/delete-books/:id", controllers.DeleteBooks())
 	}
 }

@@ -9,7 +9,7 @@ import (
 func BooksRoutes(incomingRoutes *gin.Engine) {
 	booksRoutes := incomingRoutes.Group("/api/books")
 	{
-		booksRoutes.POST("/insert",middlewares.ImageUpload(), controllers.InsertBooks())
+		booksRoutes.POST("/insert", middlewares.ImageUpload(), controllers.InsertBooks())
 		booksRoutes.GET("/get-books", controllers.GetBooks())
 		booksRoutes.GET("/get-books/:id", controllers.GetBooksById())
 		// booksRoutes.PUT("/update-books/:id", middlewares.ImageUpload(), controllers.UpdateBooks())

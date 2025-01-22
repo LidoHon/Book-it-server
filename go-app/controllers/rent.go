@@ -18,123 +18,121 @@ import (
 
 var mu sync.Mutex
 
-
 type HasuraActionRequest struct {
 	Input requests.PlaceRentRequest `json:"input"`
 }
 
 func PlaceRent() gin.HandlerFunc {
 	return func(c *gin.Context) {
-			client := libs.SetupGraphqlClient()
+		client := libs.SetupGraphqlClient()
 
-			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
-			defer cancel()
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 
-			var hasuraReq HasuraActionRequest
-			if err := c.ShouldBindJSON(&hasuraReq); err != nil {
-					log.Println("Failed to bind JSON:", err)
-					c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
-					return
-			}
-			req := hasuraReq.Input
+		var hasuraReq HasuraActionRequest
+		if err := c.ShouldBindJSON(&hasuraReq); err != nil {
+			log.Println("Failed to bind JSON:", err)
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
+			return
+		}
+		req := hasuraReq.Input
 
-			log.Println("Request Data from json binding:", req)
-			validationError := validate.Struct(req)
-			if validationError != nil {
-					log.Println("Validation failed:", validationError.Error())
-					c.JSON(http.StatusBadRequest, gin.H{"message": validationError.Error()})
-					return
-			}
+		log.Println("Request Data from json binding:", req)
+		validationError := validate.Struct(req)
+		if validationError != nil {
+			log.Println("Validation failed:", validationError.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"message": validationError.Error()})
+			return
+		}
 
-			mu.Lock()
-			defer mu.Unlock()
+		mu.Lock()
+		defer mu.Unlock()
 
-			// Check if the book is already rented
-			var query struct {
-					Book struct {
-							Available graphql.Boolean `graphql:"available"`
-					} `graphql:"books_by_pk(id: $id)"`
-			}
+		// Check if the book is already rented
+		var query struct {
+			Book struct {
+				Available graphql.Boolean `graphql:"available"`
+			} `graphql:"books_by_pk(id: $id)"`
+		}
 
-			queryVars := map[string]interface{}{
-					"id": graphql.Int(req.BookId),
-			}
+		queryVars := map[string]interface{}{
+			"id": graphql.Int(req.BookId),
+		}
 
-			log.Println("Checking book availability for Book ID:", req.BookId)
+		log.Println("Checking book availability for Book ID:", req.BookId)
 
-			err := client.Query(ctx, &query, queryVars)
-			if err != nil {
-					log.Println("Failed to check book availability:", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to check book availability", "details": err.Error()})
-					return
-			}
+		err := client.Query(ctx, &query, queryVars)
+		if err != nil {
+			log.Println("Failed to check book availability:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to check book availability", "details": err.Error()})
+			return
+		}
 
-			log.Println("Book availability status:", query.Book.Available)
+		log.Println("Book availability status:", query.Book.Available)
 
-			if !query.Book.Available {
-					log.Println("Book is already rented.")
-					c.JSON(http.StatusConflict, gin.H{"message": "book is already rented"})
-					return
-			}
+		if !query.Book.Available {
+			log.Println("Book is already rented.")
+			c.JSON(http.StatusConflict, gin.H{"message": "book is already rented"})
+			return
+		}
 
-			// Proceed with the mutation to rent the book
-			var mutation struct {
-					RentBook struct {
-							UserId graphql.Int `graphql:"userId"`
-							BookId graphql.Int `graphql:"bookId"`
-					} `graphql:"insert_rentedBooks_one(object: {bookId: $bookId, userId: $userId}) "`
-			}
+		// Proceed with the mutation to rent the book
+		var mutation struct {
+			RentBook struct {
+				UserId graphql.Int `graphql:"userId"`
+				BookId graphql.Int `graphql:"bookId"`
+			} `graphql:"insert_rentedBooks_one(object: {bookId: $bookId, userId: $userId}) "`
+		}
 
-			mutationVars := map[string]interface{}{
-					"bookId": graphql.Int(req.BookId),
-					"userId": graphql.Int(req.UserId),
-			}
+		mutationVars := map[string]interface{}{
+			"bookId": graphql.Int(req.BookId),
+			"userId": graphql.Int(req.UserId),
+		}
 
-			log.Println("Attempting to rent book:", req.BookId, "for user:", req.UserId)
+		log.Println("Attempting to rent book:", req.BookId, "for user:", req.UserId)
 
-			err = client.Mutate(ctx, &mutation, mutationVars)
-			if err != nil {
-					log.Println("Failed to place a rent:", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to create a rent", "details": err.Error()})
-					return
-			}
+		err = client.Mutate(ctx, &mutation, mutationVars)
+		if err != nil {
+			log.Println("Failed to place a rent:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to create a rent", "details": err.Error()})
+			return
+		}
 
-			log.Println("Book rented successfully:", mutation.RentBook)
+		log.Println("Book rented successfully:", mutation.RentBook)
 
-			// Update book availability to false
-			mutationBooks := struct {
-					UpdateBookByPk struct {
-							Available bool `json:"available"`
-					} `graphql:"update_books_by_pk(pk_columns: {id: $id}, _set: {available: false})"`
-			}{}
+		// Update book availability to false
+		mutationBooks := struct {
+			UpdateBookByPk struct {
+				Available bool `json:"available"`
+			} `graphql:"update_books_by_pk(pk_columns: {id: $id}, _set: {available: false})"`
+		}{}
 
-			mutaionBooksVars := map[string]interface{}{
-					"id": graphql.Int(req.BookId),
-			}
+		mutaionBooksVars := map[string]interface{}{
+			"id": graphql.Int(req.BookId),
+		}
 
-			log.Println("Updating book availability to false for Book ID:", req.BookId)
+		log.Println("Updating book availability to false for Book ID:", req.BookId)
 
-			err = client.Mutate(ctx, &mutationBooks, mutaionBooksVars)
-			if err != nil {
-					log.Println("Failed to update book availability:", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to update book availability", "details": err.Error()})
-					return
-			}
+		err = client.Mutate(ctx, &mutationBooks, mutaionBooksVars)
+		if err != nil {
+			log.Println("Failed to update book availability:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to update book availability", "details": err.Error()})
+			return
+		}
 
-			log.Println("Book availability updated successfully.")
+		log.Println("Book availability updated successfully.")
 
-			res := models.CreatedRentBook{
-					Message: "book rented successfully",
-					UserId:  graphql.Int(mutation.RentBook.UserId),
-					BookId:  graphql.Int(mutation.RentBook.BookId),
-			}
+		res := models.CreatedRentBook{
+			Message: "book rented successfully",
+			UserId:  graphql.Int(mutation.RentBook.UserId),
+			BookId:  graphql.Int(mutation.RentBook.BookId),
+		}
 
-			log.Println("Returning response:", res)
+		log.Println("Returning response:", res)
 
-			c.JSON(http.StatusOK, res)
+		c.JSON(http.StatusOK, res)
 	}
 }
-
 
 func DeleteRent() gin.HandlerFunc {
 	return func(c *gin.Context) {

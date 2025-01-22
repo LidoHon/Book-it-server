@@ -11,7 +11,7 @@ type Book struct {
 }
 
 type CreatedRentBook struct {
-	Message string `json:"message"`
+	Message string         `json:"message"`
 	UserId  graphql.Int    `json:"user_id"`
 	BookId  graphql.Int    `json:"book_id"`
 	RentDay graphql.String `json:"rent_day"`

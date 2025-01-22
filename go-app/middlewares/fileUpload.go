@@ -100,7 +100,7 @@ func ImageUpload() gin.HandlerFunc {
 			fmt.Println("Setting imageUrls in context:", imageUrls)
 
 			c.Set("imageUrls", imageUrls)
-		}else{
+		} else {
 			fmt.Println("No image data found in request body")
 		}
 		c.Next()

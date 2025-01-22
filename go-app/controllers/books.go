@@ -120,7 +120,7 @@ func UpdateBooks() gin.HandlerFunc {
 			log.Println("failed to convert bookId to int64", err)
 			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid book ID", "details": err.Error()})
 			return
-}
+		}
 
 		queryVars := map[string]interface{}{
 			"book_id": graphql.Int(bookId),
@@ -358,7 +358,6 @@ func DeleteBooks() gin.HandlerFunc {
 		})
 	}
 }
-
 
 // func UpdateImage() gin.HandlerFunc{
 // 	return func(c *gin.Context){

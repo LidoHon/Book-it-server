@@ -9,6 +9,13 @@ type Mutation {
 }
 
 type Mutation {
+  addWishlist(
+    userId: Int!
+    bookId: Int!
+  ): CreateWishlistRequest
+}
+
+type Mutation {
   editUploadedImages(
     movie_id: Int!
     images: [ImageInfo!]!
@@ -171,5 +178,9 @@ type CreatedRentBook {
   user_id: Int!
   book_id: Int!
   rent_day: String!
+}
+
+type CreateWishlistRequest {
+  message: String!
 }
 

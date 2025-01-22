@@ -13,6 +13,10 @@ import (
 	"github.com/shurcooL/graphql"
 )
 
+
+type HasuraWishlistActionRequest struct {
+	Input requests.CreateWishlistRequest `json:"input"`
+}
 func CreateWishlist() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		client := libs.SetupGraphqlClient()
@@ -20,12 +24,12 @@ func CreateWishlist() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		var req requests.CreateWishlistRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		var WishlistReq HasuraWishlistActionRequest
+		if err := c.ShouldBindJSON(&WishlistReq); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
 			return
 		}
-
+req := WishlistReq.Input
 		validationError := validate.Struct(req)
 		if validationError != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": validationError.Error()})

@@ -39,23 +39,26 @@ services:
       - serve
   # go-app:
   #   build:
-  #     context: .  # Build from the root directory (where the Dockerfile is located)
+  #     context: ./go-app # Path to your Go app folder
   #     dockerfile: Dockerfile
+  #   container_name: go_app_container
+  #   restart: always
   #   depends_on:
   #     - postgres
   #   environment:
-  #     DB_HOST: ${DB_HOST}
-  #     DB_PORT: ${DB_PORT}
-  #     DB_USER: ${DB_USER}
-  #     DB_PASSWORD: ${DB_PASSWORD}
-  #     DB_NAME: ${DB_NAME}
-  #     JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-  #     PORT: ${PORT}
+  #     DB_HOST: postgres
+  #     DB_PORT: 5432
+  #     DB_USER: ${POSTGRES_USER}
+  #     DB_PASSWORD: ${POSTGRES_PASSWORD}
+  #     DB_NAME: ${POSTGRES_DB}
+  #     JWT_SECRET_KEY: ${HASURA_GRAPHQL_ADMIN_SECRET}
+  #     PORT: 8000
   #   ports:
   #     - "8000:8000"
   #   volumes:
-  #     - ./go-app:/app 
-  #   # command: air  
+  #     - ./go-app:/app  # Mount local Go app folder for live reloading
+  #     - /app/tmp       # Temporary folder for Air hot reloading
+  #   command: ["air"] # Use Air for live reloading during development
 
 volumes:
   postgres_data:

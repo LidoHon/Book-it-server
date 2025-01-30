@@ -11,6 +11,8 @@ func RentRoutes(incomingRoutes *gin.Engine) {
 		rentRoutes.POST("/create", controllers.PlaceRent())
 		rentRoutes.DELETE("/delete/:id", controllers.DeleteRent())
 		rentRoutes.PUT("/return-book", controllers.ReturnBook())
+		rentRoutes.GET("/callback", controllers.PaymentCallback())
+		rentRoutes.PUT("/payment", controllers.ProcessPayment())
 
 	}
 }

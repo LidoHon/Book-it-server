@@ -19,6 +19,13 @@ object_relationships:
     using:
       foreign_key_constraint_on: bookId
 array_relationships:
+  - name: payments
+    using:
+      foreign_key_constraint_on:
+        column: rent_id
+        table:
+          name: payments
+          schema: public
   - name: user_rent
     using:
       manual_configuration:

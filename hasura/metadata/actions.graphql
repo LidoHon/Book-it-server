@@ -1,4 +1,11 @@
 type Mutation {
+  ProcessPayment(
+    id: Int!
+    tx_ref: String!
+  ): ProcessPaymentOutput
+}
+
+type Mutation {
   addBook(
     title: String!
     author: String!
@@ -45,8 +52,11 @@ type Mutation {
 
 type Mutation {
   rentbook(
+    id: Int
     user_id: Int!
     book_id: Int!
+    return_date: String!
+    price: Int
   ): CreatedRentBook
 }
 
@@ -90,6 +100,11 @@ input ImageInfo {
   name: String
   type: String
   base64String: String
+}
+
+input ProcessPaymentInput {
+  id: Int!
+  tx_ref: String!
 }
 
 type LoginResponce {
@@ -178,9 +193,18 @@ type CreatedRentBook {
   user_id: Int!
   book_id: Int!
   rent_day: String!
+  price: Int!
+  return_date: String!
+  payment_id: Int!
+  checkout_url: String!
 }
 
 type CreateWishlistRequest {
   message: String!
+}
+
+type ProcessPaymentOutput {
+  message: String!
+  status: String
 }
 

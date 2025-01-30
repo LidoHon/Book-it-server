@@ -1,6 +1,7 @@
 - "!include public_books.yaml"
 - "!include public_email_verification_tokens.yaml"
 - "!include public_notification.yaml"
+- "!include public_payments.yaml"
 - "!include public_rentedBooks.yaml"
 - "!include public_users.yaml"
 - "!include public_wishlist.yaml"

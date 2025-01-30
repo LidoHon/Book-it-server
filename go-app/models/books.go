@@ -11,8 +11,18 @@ type Book struct {
 }
 
 type CreatedRentBook struct {
-	Message string         `json:"message"`
-	UserId  graphql.Int    `json:"user_id"`
-	BookId  graphql.Int    `json:"book_id"`
-	RentDay graphql.String `json:"rent_day"`
+	PaymentId  graphql.Int    `json:"payment_id"`
+	CheckOutUrl graphql.String `json:"checkout_url"`
+	Message    string         `json:"message"`
+	UserId     graphql.Int    `json:"user_id"`
+	BookId     graphql.Int    `json:"book_id"`
+	RentDay    graphql.String `json:"rent_day"`
+	Price      graphql.Int    `json:"price"`
+	ReturnDate graphql.String `json:"return_date"`
+}
+
+
+type ProcessPaymentOutput struct{
+	Message string `json:"message"`
+	Status  graphql.String `json:"status"`
 }

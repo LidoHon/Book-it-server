@@ -5,11 +5,20 @@ import (
 )
 
 type PlaceRentRequest struct {
-	UserId int `json:"user_id"`
-	BookId int `json:"book_id"`
+	ID         int    `json:"id"`
+	UserId     int    `json:"user_id"`
+	BookId     int    `json:"book_id"`
+	ReturnDate string `json:"return_date"`
+	Price      int    `json:"price"`
 }
 
 type UpdateRentRequest struct {
 	ID          graphql.Int    `json:"id"`
 	ReturedDate graphql.String `json:"returedDate"`
+}
+
+
+type PaymentProcessRequest struct {
+	TxRef 			string `json:"tx_ref"`
+	Id 				int    `json:"id"`
 }

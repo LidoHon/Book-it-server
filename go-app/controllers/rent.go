@@ -221,6 +221,7 @@ func PlaceRent() gin.HandlerFunc {
 			log.Println("Payment record inserted successfully with id:." , paymentMutation.InsertPayment.ID)
 			paymentID = paymentMutation.InsertPayment.ID
 			checkoutURL = paymentMutation.InsertPayment.CheckoutURL
+			log.Println("Payment record inserted successfully and checkout url:." , checkoutURL)
 
 		} else {
 			log.Println("Payment initiation failed:", paymentRespose.Message)
@@ -510,25 +511,22 @@ func ProcessPayment() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		var req struct {
-			Id     int    `json:"id"`
-			TxRef  string `json:"tx_ref"`
-		}
+		var req requests.PaymentProcessRequest
 		
 		if err := c.ShouldBindJSON(&req); err != nil {
 			log.Println("Failed to bind JSON:", err)
 			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
 			return
 		}
-		if req.TxRef == "" {
+		if req.Input.TxRef == "" {
 			log.Println("tx____ref is empty")
 		}else{
-			log.Println("tx____ref:" , req.TxRef)
+			log.Println("tx____ref:" , req.Input.TxRef)
 		}
 
-		log.Println("tx____ref_id:" , req.Id)
+		log.Println("tx____ref_id:" , req.Input.Id)
 		// Verify the transaction reference
-		isVerified, err := helpers.VerifyPayment(req.TxRef)
+		isVerified, err := helpers.VerifyPayment(req.Input.TxRef)
 		if err != nil || !isVerified {
 			log.Println("Payment verification failed:", err)
 			c.JSON(http.StatusOK, gin.H{"message": "payment verification failed" ,"details": err.Error()})
@@ -537,7 +535,7 @@ func ProcessPayment() gin.HandlerFunc {
 
 		// Update payment status in payments table
 		mutationVars := map[string]interface{}{
-			"id": graphql.Int(req.Id),
+			"id": graphql.Int(req.Input.Id),
 		}
 
 		type UpdatePaymentMutation struct {
@@ -559,8 +557,8 @@ func ProcessPayment() gin.HandlerFunc {
 			return
 		}
 
-		log.Println("Payment status updated successfully for Payment ID:", req.Id)
-		log.Println("Payment status updated successfully for Payment txref:", req.TxRef)
+		log.Println("Payment status updated successfully for Payment ID:", req.Input.Id)
+		log.Println("Payment status updated successfully for Payment txref:", req.Input.TxRef)
 		res := models.ProcessPaymentOutput{
 			Message:"payment processed successfully and status is updated",
 			Status: "success",

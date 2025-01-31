@@ -17,8 +17,9 @@ type UpdateRentRequest struct {
 	ReturedDate graphql.String `json:"returedDate"`
 }
 
-
 type PaymentProcessRequest struct {
-	TxRef 			string `json:"tx_ref"`
-	Id 				int    `json:"id"`
+	Input struct{
+		TxRef string `json:"tx_ref"`
+		Id    int    `json:"id"`
+	}`json:"input"`
 }

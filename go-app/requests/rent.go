@@ -1,8 +1,6 @@
 package requests
 
-import (
-	"github.com/shurcooL/graphql"
-)
+// "github.com/shurcooL/graphql"
 
 type PlaceRentRequest struct {
 	ID         int    `json:"id"`
@@ -13,13 +11,21 @@ type PlaceRentRequest struct {
 }
 
 type UpdateRentRequest struct {
-	ID          graphql.Int    `json:"id"`
-	ReturedDate graphql.String `json:"returedDate"`
+	Input struct {
+		ID          int    `json:"id"`
+		ReturedDate string `json:"returedDate"`
+	} `json:"input"`
 }
 
 type PaymentProcessRequest struct {
-	Input struct{
+	Input struct {
 		TxRef string `json:"tx_ref"`
 		Id    int    `json:"id"`
-	}`json:"input"`
+	} `json:"input"`
+}
+
+type ReturnBookRequest struct {
+	Input struct {
+		BookId int `json:"bookId"`
+	} `json:"input"`
 }

@@ -83,6 +83,15 @@ actions:
         query_params: {}
         template_engine: Kriti
         version: 2
+  - name: returnBook
+    definition:
+      kind: synchronous
+      handler: '{{HASURA_ACTION_BASE_URL}}/api/rent/return-book'
+      request_transform:
+        method: POST
+        query_params: {}
+        template_engine: Kriti
+        version: 2
   - name: signup
     definition:
       kind: synchronous
@@ -130,6 +139,15 @@ actions:
     permissions:
       - role: user
       - role: systemadmin
+  - name: verifyPayment
+    definition:
+      kind: synchronous
+      handler: '{{HASURA_ACTION_BASE_URL}}/api/rent/payment'
+      request_transform:
+        method: PUT
+        query_params: {}
+        template_engine: Kriti
+        version: 2
 custom_types:
   enums: []
   input_objects:
@@ -152,4 +170,5 @@ custom_types:
     - name: CreatedRentBook
     - name: CreateWishlistRequest
     - name: ProcessPaymentOutput
+    - name: BookReturnOUtput
   scalars: []

@@ -2,7 +2,7 @@ type Mutation {
   ProcessPayment(
     id: Int!
     tx_ref: String!
-  ): ProcessPaymentOutput
+  ): ProcessPaymentOutput!
 }
 
 type Mutation {
@@ -61,6 +61,12 @@ type Mutation {
 }
 
 type Mutation {
+  returnBook(
+    bookId: Int!
+  ): BookReturnOUtput!
+}
+
+type Mutation {
   signup(
     userName: String!
     email: String!
@@ -94,6 +100,13 @@ type Mutation {
     verification_token: String!
     user_id: Int!
   ): ResetedPasswordOutput!
+}
+
+type Mutation {
+  verifyPayment(
+    tx_ref: String!
+    id: Int!
+  ): ProcessPaymentOutput!
 }
 
 input ImageInfo {
@@ -206,5 +219,9 @@ type CreateWishlistRequest {
 type ProcessPaymentOutput {
   message: String!
   status: String
+}
+
+type BookReturnOUtput {
+  message: String!
 }
 

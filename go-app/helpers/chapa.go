@@ -126,9 +126,6 @@ func InitPayment(form *PaymentRequest) (*PaymentResponse, error) {
 // 	return chapaResp.Data.Status == "success", nil
 // }
 
-
-
-
 // VerifyPayment verifies the payment transaction using Chapa API
 func VerifyPayment(txRef string) (bool, error) {
 	if txRef == "" {
@@ -189,4 +186,3 @@ func VerifyPayment(txRef string) (bool, error) {
 	// Return error if payment verification fails
 	return false, fmt.Errorf("payment verification failed: %s", chapaResp.Status)
 }
-

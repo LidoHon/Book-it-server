@@ -515,13 +515,8 @@ func ProcessPayment() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid input", "details": err.Error()})
 			return
 		}
-		if req.Input.TxRef == "" {
-			log.Println("tx____ref is empty")
-		} else {
-			log.Println("tx____ref:", req.Input.TxRef)
-		}
 
-		log.Println("tx____ref_id:", req.Input.Id)
+		log.Println("tx_ref_id:", req.Input.Id)
 		// Verify the transaction reference
 		isVerified, err := helpers.VerifyPayment(req.Input.TxRef)
 		if err != nil || !isVerified {
@@ -534,7 +529,6 @@ func ProcessPayment() gin.HandlerFunc {
 		mutationVars := map[string]interface{}{
 			"id": graphql.Int(req.Input.Id),
 		}
-
 		type UpdatePaymentMutation struct {
 			Status graphql.String `graphql:"status"`
 			TxRef  graphql.String `graphql:"tx_ref"`

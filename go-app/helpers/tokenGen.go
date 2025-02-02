@@ -46,7 +46,7 @@ type SignedDetails struct {
 func GenerateAllTokens(email string, userName string, role string, uid string) (signedToken string, signedRefreshToken string, err error) {
 	claims := &SignedDetails{
 		HasuraClaims: HasuraClaims{
-			AllowedRoles: []string{"user", "admin", "recuriter"},
+			AllowedRoles: []string{"user", "admin"},
 			DefaultRole:  role,
 			UserID:       uid,
 			Role:         role,

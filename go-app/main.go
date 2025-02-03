@@ -25,29 +25,29 @@ func main() {
 	if port == "" {
 		port = "8000"
 	}
- // Load session secret from environment variable
- sessionSecret := os.Getenv("SESSION_SECRET")
- if sessionSecret == "" {
-	 log.Fatal("SESSION_SECRET is not set in environment variables")
- }
+	// Load session secret from environment variable
+	sessionSecret := os.Getenv("SESSION_SECRET")
+	if sessionSecret == "" {
+		log.Fatal("SESSION_SECRET is not set in environment variables")
+		sessionSecret = "secret"
+	}
 
- // Assign the session store to `gothic` using the session secret
- store = sessions.NewCookieStore([]byte(sessionSecret))
- gothic.Store = store
-
+	// Assign the session store to `gothic` using the session secret
+	store = sessions.NewCookieStore([]byte(sessionSecret))
+	gothic.Store = store
 
 	router := gin.New()
 	router.Use(gin.Logger())
 
-		// Configure Google OAuth
-		goth.UseProviders(
-			google.New(
-				os.Getenv("GOOGLE_CLIENT_ID"),
-				os.Getenv("GOOGLE_CLIENT_SECRET"),
-				"http://localhost:"+port+"/auth/google/callback",
-				"email", "profile",
-			),
-		)
+	// Configure Google OAuth
+	goth.UseProviders(
+		google.New(
+			os.Getenv("GOOGLE_CLIENT_ID"),
+			os.Getenv("GOOGLE_CLIENT_SECRET"),
+			"http://localhost:"+port+"/auth/google/callback",
+			"email", "profile",
+		),
+	)
 
 	routes.RegisterRoutes(router)
 

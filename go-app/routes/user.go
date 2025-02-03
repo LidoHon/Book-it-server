@@ -18,14 +18,10 @@ import (
 
 func AuthRoutes(incomingRoutes *gin.Engine) {
 	incomingRoutes.GET("/auth/google", func(c *gin.Context) {
-		// session := sessions.Default(c)
-		// gothic.Store = session 
 		gothic.BeginAuthHandler(c.Writer, c.Request)
 	})
 
 	incomingRoutes.GET("/auth/google/callback", func(c *gin.Context) {
-		// session := sessions.Default(c)
-		// gothic.Store = session
 		user, err := gothic.CompleteUserAuth(c.Writer, c.Request)
 		if err != nil {
 			responseError := map[string]string{
@@ -40,7 +36,7 @@ func AuthRoutes(incomingRoutes *gin.Engine) {
 			return
 		}
 
-		token, refreshToken, userId, userRole, err := helpers.HandleAuth(user.Email, user.Name, user.AvatarURL, user.UserID )
+		token, refreshToken, userId, userRole, err := helpers.HandleAuth(user.Email, user.Name, user.AvatarURL, user.UserID)
 		if err != nil {
 			log.Println("Something went wrong:", err.Error())
 			responseError := map[string]string{

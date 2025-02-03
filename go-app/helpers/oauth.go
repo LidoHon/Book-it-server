@@ -8,7 +8,7 @@ import (
 	"github.com/shurcooL/graphql"
 )
 
-func HandleAuth(email , userName , profile , googleID string) (token string, refreshToken string, id int, role string, err error) {
+func HandleAuth(email, userName, profile, googleID string) (token string, refreshToken string, id int, role string, err error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -18,7 +18,7 @@ func HandleAuth(email , userName , profile , googleID string) (token string, ref
 	var query struct {
 		User []struct {
 			ID       graphql.Int    `graphql:"id"`
-			UserName     graphql.String `graphql:"username"`
+			UserName graphql.String `graphql:"username"`
 			Email    graphql.String `graphql:"email"`
 			Password graphql.String `graphql:"password"`
 			Role     graphql.String `graphql:"role"`
@@ -37,28 +37,27 @@ func HandleAuth(email , userName , profile , googleID string) (token string, ref
 		return "", "", 0, "", err
 	}
 
-
 	// If user does not exist, create a new one
 	if len(query.User) == 0 {
 		var mutation struct {
 			InsertUser struct {
-				ID      graphql.Int    `graphql:"id"`
-				UserName    graphql.String `graphql:"username"`
-				Email   graphql.String `graphql:"email"`
-				Profile graphql.String `graphql:"profile"`
-				Role    graphql.String `graphql:"role"`
-				TokenId graphql.String `graphql:"tokenId"`
+				ID       graphql.Int    `graphql:"id"`
+				UserName graphql.String `graphql:"username"`
+				Email    graphql.String `graphql:"email"`
+				Profile  graphql.String `graphql:"profile"`
+				Role     graphql.String `graphql:"role"`
+				TokenId  graphql.String `graphql:"tokenId"`
 				GoogleID graphql.String `graphql:"google_id"`
 			} `graphql:"insert_users_one(object: {username: $userName, email: $email, profile: $profile, role: $role, is_email_verified: $is_email_verified, google_id: $googleID})"`
 		}
 
 		mutationVars := map[string]interface{}{
-			"userName": graphql.String(userName),
-			"email":    graphql.String(email),
-			"profile":  graphql.String(profile),
-			"role":     graphql.String("user"),
+			"userName":          graphql.String(userName),
+			"email":             graphql.String(email),
+			"profile":           graphql.String(profile),
+			"role":              graphql.String("user"),
 			"is_email_verified": graphql.Boolean(true),
-			"googleID":  graphql.String(googleID),
+			"googleID":          graphql.String(googleID),
 		}
 
 		err = client.Mutate(ctx, &mutation, mutationVars)

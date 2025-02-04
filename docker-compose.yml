@@ -1,6 +1,5 @@
 services:
   postgres:
-    build: .
     image: postgres:15
     container_name: postgres_container
     restart: always

@@ -67,19 +67,18 @@ func AuthRoutes(incomingRoutes *gin.Engine) {
 		c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
 	})
 
-
 	// github open auth
 
 	incomingRoutes.GET("/auth/github", func(c *gin.Context) {
 		gothic.BeginAuthHandler(c.Writer, c.Request)
 	})
 
-	incomingRoutes.GET("/auth/github/callback", func( c *gin.Context){
+	incomingRoutes.GET("/auth/github/callback", func(c *gin.Context) {
 		user, err := gothic.CompleteUserAuth(c.Writer, c.Request)
 		if err != nil {
 			responseError := map[string]string{
 				"message": "error logging inn with github",
-				"details":err.Error(),
+				"details": err.Error(),
 			}
 			jsonData, _ := json.Marshal(responseError)
 			escapedData := url.QueryEscape(string(jsonData))
@@ -88,14 +87,14 @@ func AuthRoutes(incomingRoutes *gin.Engine) {
 			return
 		}
 
-		token, refreshToken, userId, userRole,err := helpers.HandleAuth(user.Email, user.Name, user.AvatarURL, user.UserID, user.Provider)
+		token, refreshToken, userId, userRole, err := helpers.HandleAuth(user.Email, user.Name, user.AvatarURL, user.UserID, user.Provider)
 		if err != nil {
 			log.Println("Something went wrong:", err.Error())
 			responseError := map[string]string{
-				"message":"error logging with github",
+				"message": "error logging with github",
 				"details": err.Error(),
 			}
-			jsonData, _ :=json.Marshal(responseError)
+			jsonData, _ := json.Marshal(responseError)
 			escapedData := url.QueryEscape(string(jsonData))
 			redirectUrl := os.Getenv("CLIENT_LOGIN_URL") + "?error=" + escapedData
 			c.Redirect(http.StatusTemporaryRedirect, redirectUrl)

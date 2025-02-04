@@ -54,9 +54,9 @@ func HandleAuth(email, userName, profile, providerId, providerName string) (toke
 		}
 
 		var googleID, githubID graphql.String
-		if providerName == "google"{
-			googleID =graphql.String(providerId)
-		}else if providerName == "github"{
+		if providerName == "google" {
+			googleID = graphql.String(providerId)
+		} else if providerName == "github" {
 			githubID = graphql.String(providerId)
 		}
 
@@ -66,8 +66,8 @@ func HandleAuth(email, userName, profile, providerId, providerName string) (toke
 			"profile":           graphql.String(profile),
 			"role":              graphql.String("user"),
 			"is_email_verified": graphql.Boolean(true),
-			"googleID":  googleID,
-			"githubID": githubID,
+			"googleID":          googleID,
+			"githubID":          githubID,
 		}
 
 		err = client.Mutate(ctx, &mutation, mutationVars)

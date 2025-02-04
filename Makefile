@@ -35,25 +35,8 @@ confirm:
 ## run/api: run the cmd/api application
 .PHONY: run-go-app
 run-go-app:
-	@go run ./go-app
+	@cd go-app && go run .
 
-
-## db/psql: connect to the database using psql
-.PHONY: db/psql
-db/psql:
-	psql ${DB_DSN}
-
-## db/migrations/new name=$1: create a new database migration
-.PHONY: db/migrations/new
-db/migrations/new:
-	@echo "creating migration files for ${name}..."
-	migrate create -seq -ext=.sql -dir=./migrations ${name}
-
-## db/migrations/up: apply all up database migrations
-.PHONY: db/migrations/up
-db/migrations/up: confirm
-	@echo "running up migratons..."
-	migrate -path ./migrations -database ${DB_DSN} up
 
 
 # ============================================================================== #
@@ -77,25 +60,26 @@ build/api:
 .PHONY: audit
 audit: vendor
 	@echo 'Tidying and verfying module dependancies...'
-	go mod tidy
-	go mod verify
+	cd go-app && go mod tidy
+	cd go-app && go mod verify
+	cd go-app && go mod vendor
 
 	@echo 'Formatting code...'
-	go fmt ./...
+	cd go-app && go fmt ./...
 
 	@echo 'Vetting code...'
-	go vet ./...
-	staticcheck ./...
+	cd go-app && go vet ./...
+	scd go-app && staticcheck ./...
 
 	@echo 'Running tests...'
-	go test -race -vet=off ./...
+	cd go-app && go test -race -vet=off ./...
 
 ## vendor: tidy and vendor dependencies
 .PHONY: vendor
 vendor:
 	@echo 'Tidying and verfying module dependancies...'
-	go mod tidy
-	go mod verify
+	cd go-app && go mod tidy
+	cd go-app && go mod verify
 
 	@echo 'Vendering dependancies'
-	go mod vendor
+	cd go-app &&  go mod vendor

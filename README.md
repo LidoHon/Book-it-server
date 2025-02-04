@@ -20,7 +20,6 @@ This is a **Book Renting App** built to learn **Golang** with **Hasura GraphQL**
 - Docker
 - Golang
 - Hasura CLI
-- PostgreSQL
 
 ### Installation
 1. Clone the repository:
@@ -92,10 +91,14 @@ air
 ```
 
 ## API Documentation
-The API is powered by **Hasura GraphQL**, and the endpoints can be accessed via:
+
+Run Hasura Console using the CLI:
 ```
-http://localhost:8080/v1/graphql
+
+hasura console --admin-secret "<your admin secret>"
 ```
+
+This will start the Hasura console at: http://localhost:9695/
 
 ## Authentication
 ### Custom Authentication

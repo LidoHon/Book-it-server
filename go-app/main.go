@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
+	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/google"
 )
 
@@ -46,6 +47,11 @@ func main() {
 			os.Getenv("GOOGLE_CLIENT_SECRET"),
 			"http://localhost:"+port+"/auth/google/callback",
 			"email", "profile",
+		),
+		github.New(
+			os.Getenv("GITHUB_CLIENT_ID"),
+			os.Getenv("GITHUB_CLIENT_SECRET"),
+			"http://localhost:"+port+"/auth/github/callback",
 		),
 	)
 

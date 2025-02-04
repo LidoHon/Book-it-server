@@ -11,12 +11,14 @@ import (
 	"github.com/LidoHon/devConnect/controllers"
 	"github.com/LidoHon/devConnect/helpers"
 	"github.com/LidoHon/devConnect/middlewares"
+
 	// "github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/markbates/goth/gothic"
 )
 
 func AuthRoutes(incomingRoutes *gin.Engine) {
+	// google open auth
 	incomingRoutes.GET("/auth/google", func(c *gin.Context) {
 		gothic.BeginAuthHandler(c.Writer, c.Request)
 	})
@@ -36,7 +38,7 @@ func AuthRoutes(incomingRoutes *gin.Engine) {
 			return
 		}
 
-		token, refreshToken, userId, userRole, err := helpers.HandleAuth(user.Email, user.Name, user.AvatarURL, user.UserID)
+		token, refreshToken, userId, userRole, err := helpers.HandleAuth(user.Email, user.Name, user.AvatarURL, user.UserID, user.Provider)
 		if err != nil {
 			log.Println("Something went wrong:", err.Error())
 			responseError := map[string]string{
@@ -60,6 +62,61 @@ func AuthRoutes(incomingRoutes *gin.Engine) {
 		}
 		jsonData, _ := json.Marshal(responseData)
 		escapedData := url.QueryEscape(string(jsonData))
+		redirectUrl := os.Getenv("CLIENT_HOMEPAGE_URL") + "?data=" + escapedData
+		log.Println("Redirecting to:", redirectUrl)
+		c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
+	})
+
+
+	// github open auth
+
+	incomingRoutes.GET("/auth/github", func(c *gin.Context) {
+		gothic.BeginAuthHandler(c.Writer, c.Request)
+	})
+
+	incomingRoutes.GET("/auth/github/callback", func( c *gin.Context){
+		user, err := gothic.CompleteUserAuth(c.Writer, c.Request)
+		if err != nil {
+			responseError := map[string]string{
+				"message": "error logging inn with github",
+				"details":err.Error(),
+			}
+			jsonData, _ := json.Marshal(responseError)
+			escapedData := url.QueryEscape(string(jsonData))
+			redirectUrl := os.Getenv("CLIENT_LOGIN_URL") + "?error=" + escapedData
+			c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
+			return
+		}
+
+		token, refreshToken, userId, userRole,err := helpers.HandleAuth(user.Email, user.Name, user.AvatarURL, user.UserID, user.Provider)
+		if err != nil {
+			log.Println("Something went wrong:", err.Error())
+			responseError := map[string]string{
+				"message":"error logging with github",
+				"details": err.Error(),
+			}
+			jsonData, _ :=json.Marshal(responseError)
+			escapedData := url.QueryEscape(string(jsonData))
+			redirectUrl := os.Getenv("CLIENT_LOGIN_URL") + "?error=" + escapedData
+			c.Redirect(http.StatusTemporaryRedirect, redirectUrl)
+			return
+		}
+
+		responseData := map[string]string{
+			"message":      "user registerd sucessfully",
+			"token":        token,
+			"refreshToken": refreshToken,
+			"id":           strconv.Itoa(userId),
+			"role":         userRole,
+		}
+		if len(responseData) == 0 {
+			log.Println("Response data is empty")
+		}
+		log.Println("response data:", responseData)
+
+		jsonData, _ := json.Marshal(responseData)
+		escapedData := url.QueryEscape(string(jsonData))
+		log.Println("escapedDataaaaaa:", escapedData)
 		redirectUrl := os.Getenv("CLIENT_HOMEPAGE_URL") + "?data=" + escapedData
 		log.Println("Redirecting to:", redirectUrl)
 		c.Redirect(http.StatusTemporaryRedirect, redirectUrl)

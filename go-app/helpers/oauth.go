@@ -8,7 +8,7 @@ import (
 	"github.com/shurcooL/graphql"
 )
 
-func HandleAuth(email, userName, profile, googleID string) (token string, refreshToken string, id int, role string, err error) {
+func HandleAuth(email, userName, profile, providerId, providerName string) (token string, refreshToken string, id int, role string, err error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -24,6 +24,7 @@ func HandleAuth(email, userName, profile, googleID string) (token string, refres
 			Role     graphql.String `graphql:"role"`
 			TokenId  graphql.String `graphql:"tokenId"`
 			GoogleID graphql.String `graphql:"google_id"`
+			GithubID graphql.String `graphql:"github_id"`
 		} `graphql:"users(where: {email: {_eq: $email}})"`
 	}
 
@@ -48,7 +49,15 @@ func HandleAuth(email, userName, profile, googleID string) (token string, refres
 				Role     graphql.String `graphql:"role"`
 				TokenId  graphql.String `graphql:"tokenId"`
 				GoogleID graphql.String `graphql:"google_id"`
-			} `graphql:"insert_users_one(object: {username: $userName, email: $email, profile: $profile, role: $role, is_email_verified: $is_email_verified, google_id: $googleID})"`
+				GithubID graphql.String `graphql:"github_id"`
+			} `graphql:"insert_users_one(object: {username: $userName, email: $email, profile: $profile, role: $role, is_email_verified: $is_email_verified, google_id: $googleID, github_id: $githubID})"`
+		}
+
+		var googleID, githubID graphql.String
+		if providerName == "google"{
+			googleID =graphql.String(providerId)
+		}else if providerName == "github"{
+			githubID = graphql.String(providerId)
 		}
 
 		mutationVars := map[string]interface{}{
@@ -57,7 +66,8 @@ func HandleAuth(email, userName, profile, googleID string) (token string, refres
 			"profile":           graphql.String(profile),
 			"role":              graphql.String("user"),
 			"is_email_verified": graphql.Boolean(true),
-			"googleID":          graphql.String(googleID),
+			"googleID":  googleID,
+			"githubID": githubID,
 		}
 
 		err = client.Mutate(ctx, &mutation, mutationVars)

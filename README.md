@@ -82,6 +82,11 @@ This is a **Book Renting App** built to learn **Golang** with **Hasura GraphQL**
    docker-compose up -d
    ```
 4. Run the Go Backend
+   - ** cd to the go app
+   ```sh
+   cd go-app
+   ```
+  - ** and run the app
 ```sh
 go run main.go
 ```
